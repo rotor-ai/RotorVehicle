@@ -26,4 +26,5 @@ dependencies {
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
     compileOnly 'com.google.android.things:androidthings:+'
     implementation 'com.jakewharton.timber:timber:4.7.0'
+    implementation 'org.jetbrains:annotations-java5:15.0'
 }
