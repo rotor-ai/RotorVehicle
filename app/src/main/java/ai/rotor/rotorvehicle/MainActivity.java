@@ -1,7 +1,17 @@
 package ai.rotor.rotorvehicle;
 
 import android.app.Activity;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.os.Bundle;
+import android.util.Log;
+
+import com.google.android.things.bluetooth.BluetoothConfigManager;
+import com.google.android.things.bluetooth.BluetoothConnectionManager;
+import com.google.android.things.bluetooth.BluetoothPairingCallback;
+import com.google.android.things.bluetooth.PairingParams;
+
+import timber.log.Timber;
 
 /**
  * Skeleton of an Android Things activity.
@@ -23,10 +33,33 @@ import android.os.Bundle;
  * @see <a href="https://github.com/androidthings/contrib-drivers#readme">https://github.com/androidthings/contrib-drivers#readme</a>
  */
 public class MainActivity extends Activity {
+    private BTPairingCallback pairingCallback = new BTPairingCallback();
+    BluetoothAdapter btAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Log.d("MainActivity", "Starting up...");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        BluetoothAdapter.getDefaultAdapter().setName("Vehicle");
+        btAdapter = BluetoothAdapter.getDefaultAdapter();
+        BluetoothConfigManager btConfigManager = BluetoothConfigManager.getInstance();
+
+        btConfigManager.setIoCapability(BluetoothConfigManager.IO_CAPABILITY_IO);
+        
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.d("MainActivity", "Resuming...");
+    }
+
+    private class BTPairingCallback implements BluetoothPairingCallback {
+        @Override
+        public void onPairingInitiated(BluetoothDevice bluetoothDevice, PairingParams pairingParams) {
+            BluetoothConnectionManager.getInstance().finishPairing(bluetoothDevice);
+        }
     }
 }
