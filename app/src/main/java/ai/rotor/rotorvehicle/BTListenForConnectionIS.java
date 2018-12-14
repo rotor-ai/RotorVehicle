@@ -26,6 +26,7 @@ public class BTListenForConnectionIS extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
+        Log.d("BTListenForConnectionIS", "onHandleIntent");
         try {
             Log.d("BTListenForConnectionIS", "Inside try statement...");
             BluetoothServerSocket socket = BluetoothAdapter.getDefaultAdapter().listenUsingRfcommWithServiceRecord("rotor.ai", RotorUtils.ROTOR_UUID);

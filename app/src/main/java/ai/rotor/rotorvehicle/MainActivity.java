@@ -1,12 +1,16 @@
 package ai.rotor.rotorvehicle;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.app.DialogFragment;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothClass;
 import android.bluetooth.BluetoothDevice;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
-import android.content.Intent;
 
 import com.google.android.things.bluetooth.BluetoothClassFactory;
 import com.google.android.things.bluetooth.BluetoothConfigManager;
@@ -34,70 +38,92 @@ import com.google.android.things.bluetooth.PairingParams;
  * @see <a href="https://github.com/androidthings/contrib-drivers#readme">https://github.com/androidthings/contrib-drivers#readme</a>
  */
 public class MainActivity extends Activity {
-    private BTPairingCallback pairingCallback = new BTPairingCallback();
-    BluetoothAdapter btAdapter;
-    static int REQUEST_TURN_BT_ON = 1;
-    static int REQUEST_MAKE_DISCOVERABLE = 2;
+    private static final String TAG = "Debug - MainActivity";
+    private BluetoothAdapter myBluetoothAdapter;
+    private BluetoothConnectionManager myBluetoothConnectionManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Log.d("MainActivity", "Starting up...");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        BluetoothAdapter.getDefaultAdapter().setName("Vehicle");
-        btAdapter = BluetoothAdapter.getDefaultAdapter();
+        // Set up bluetooth
         BluetoothConfigManager btConfigManager = BluetoothConfigManager.getInstance();
-
         btConfigManager.setIoCapability(BluetoothConfigManager.IO_CAPABILITY_IO);
         btConfigManager.setBluetoothClass(BluetoothClassFactory.build(BluetoothClass.Service.INFORMATION, BluetoothClass.Device.TOY_VEHICLE));
+        myBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        myBluetoothAdapter.setName("Vehicle");
+        myBluetoothConnectionManager = BluetoothConnectionManager.getInstance();
+        myBluetoothConnectionManager.registerPairingCallback(myBluetoothPairingCallback);
 
-        Log.d("MainActivity","Checking if Bluetooth is on...");
-        if (!btAdapter.isEnabled()) {
-            Log.d("MainActivity", "Turning Bluetooth on...");
-            turnBTRadioON();
-        } else {
-            Log.d("MainActivity", "Starting discoverability...");
-            startDiscoverability();
-        }
+        // Make discoverable
+        Intent discoverableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
+        discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 120);
+        startActivity(discoverableIntent);
 
-        BluetoothConnectionManager.getInstance().registerPairingCallback(pairingCallback);
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == REQUEST_TURN_BT_ON) {
-            startDiscoverability();
-        }
-        else if (requestCode == REQUEST_MAKE_DISCOVERABLE) {
-            Log.d("MainActivity", "Starting BTListenForConnectionIS");
-            startService(BTListenForConnectionIS.makeIntent(this));
-        }
-
-        super.onActivityResult(requestCode, resultCode, data);
+    private void alertTest() {
+        Log.d(TAG, "alert being created");
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+        Log.d(TAG, "alert builder created");
+        alertDialogBuilder.create();
+        Log.d(TAG, "alert created");
+        /*alertDialog.setTitle("Alert");
+        alertDialog.setMessage("Alert message to be shown");
+        alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "OK",
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
+        alertDialog.show();*/
     }
 
     @Override
     protected void onDestroy() {
-        BluetoothConnectionManager.getInstance().unregisterPairingCallback(pairingCallback);
         super.onDestroy();
+        myBluetoothConnectionManager.unregisterPairingCallback(myBluetoothPairingCallback);
     }
 
-    private class BTPairingCallback implements BluetoothPairingCallback {
+    private BluetoothPairingCallback myBluetoothPairingCallback = new BluetoothPairingCallback() {
+
         @Override
-        public void onPairingInitiated(BluetoothDevice bluetoothDevice, PairingParams pairingParams) {
-            BluetoothConnectionManager.getInstance().finishPairing(bluetoothDevice);
-            Log.d("MainActivity", "Pairing Initiated...");
+        public void onPairingInitiated(BluetoothDevice initiatingDevice, PairingParams pairingParams) {
+            Log.d(TAG, "pairing initiated");
+            alertTest();
         }
+    };
+
+    // NOT USING THIS FUNCTION CURRENTLY
+    private void pairingDialog(String title, String message, final String cancelString, final String acceptString) {
+        Log.d(TAG, "Opening Pairing Dialog");
+        android.app.AlertDialog.Builder builderSingle = new android.app.AlertDialog.Builder(MainActivity.this);
+        builderSingle.setTitle(title);
+        builderSingle.setMessage(message);
+
+        builderSingle.setNegativeButton(cancelString, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                Log.d(TAG, "pairing cancelled");
+            }
+        });
+
+        builderSingle.setPositiveButton(acceptString, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                Log.d(TAG, "pairing accepted");
+            }
+        });
+
+        AlertDialog dialog = builderSingle.create();
+
+        dialog.show();
     }
 
-    private void turnBTRadioON() {
-        startActivityForResult(new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE), REQUEST_TURN_BT_ON);
-    }
 
-    private void startDiscoverability() {
-        Intent intent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
-        intent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 60);
-        startActivityForResult(intent, REQUEST_MAKE_DISCOVERABLE);
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
     }
 }
