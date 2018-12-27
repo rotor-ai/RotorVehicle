@@ -32,6 +32,7 @@ public class MainActivity extends Activity {
     private BluetoothAdapter mBluetoothAdapter;
     private BluetoothDevice mPairedBTDevice;
     private Set<BluetoothDevice> mPairedDevices;
+    private AcceptThread acceptThread;
 
     private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
         private static final String TAG = "Debug";
@@ -65,6 +66,8 @@ public class MainActivity extends Activity {
                     mPairedBTDevice = mDevice;
                     showEnabled();
                     hideProgress();
+                    acceptThread = new AcceptThread();
+                    acceptThread.start();
                 }
                 if (mDevice.getBondState() == BluetoothDevice.BOND_BONDING) {
                     Log.d(TAG, "BroadcastReceiver: BOND_BONDING.");
@@ -85,7 +88,7 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Log.d(TAG, "onCreate");
+        Log.d(TAG, "onCreate, thread ID: " + Thread.currentThread().getId());
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 

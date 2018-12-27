@@ -16,6 +16,7 @@ public class AcceptThread extends Thread {
     private BluetoothAdapter mBluetoothAdapter;
 
     public AcceptThread() {
+        Log.d(TAG, "AcceptThread initializing");
         BluetoothServerSocket tmp = null;
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         try {
@@ -27,9 +28,11 @@ public class AcceptThread extends Thread {
     }
 
     public void run() {
+        Log.d(TAG, "AcceptThread running, thread ID: " + Thread.currentThread().getId());
         BluetoothSocket socket = null;
 
         while(true) {
+            Log.d(TAG, "in loop...");
             try {
                 socket = mServerSocket.accept();
             } catch (IOException e) {
@@ -38,7 +41,7 @@ public class AcceptThread extends Thread {
             }
 
             if (socket != null) {
-                manageMyConnectedSocket(socket);
+                //manageMyConnectedSocket(socket);
                 try {
                     mServerSocket.close();
                 } catch (IOException e) {
