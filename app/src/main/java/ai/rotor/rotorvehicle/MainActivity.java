@@ -10,11 +10,13 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+
 
 import java.lang.reflect.Method;
 import java.util.Set;
@@ -32,7 +34,8 @@ public class MainActivity extends Activity {
     private BluetoothAdapter mBluetoothAdapter;
     private BluetoothDevice mPairedBTDevice;
     private Set<BluetoothDevice> mPairedDevices;
-    private AcceptThread acceptThread;
+    private BluetoothService mBluetoothService;
+    private Boolean connected;
 
     private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
         private static final String TAG = "Debug";
@@ -51,7 +54,7 @@ public class MainActivity extends Activity {
                     mPairedDevices = mBluetoothAdapter.getBondedDevices();
                     if (mPairedDevices == null || mPairedDevices.size() == 0) {
                         showDisabled();
-                    } else if (mPairedDevices.size() == 1) {
+                    } else if (mPairedDevices.size() == 1 && !connected) {
                         mPairedBTDevice = mPairedDevices.iterator().next();
                         showEnabled();
                     }
@@ -66,8 +69,8 @@ public class MainActivity extends Activity {
                     mPairedBTDevice = mDevice;
                     showEnabled();
                     hideProgress();
-                    acceptThread = new AcceptThread();
-                    acceptThread.start();
+                    mBluetoothService = new BluetoothService();
+                    mBluetoothService.startClient(MainActivity.this);
                 }
                 if (mDevice.getBondState() == BluetoothDevice.BOND_BONDING) {
                     Log.d(TAG, "BroadcastReceiver: BOND_BONDING.");
@@ -82,6 +85,21 @@ public class MainActivity extends Activity {
                         showEnabled();
                     }
                 }
+            }
+
+            if (action.equals("streamsAcquired")) {
+                connected = true;
+                showConnected();
+            }
+
+            if (action.equals("disconnected")) {
+                connected = false;
+                showEnabled();
+            }
+
+            if (action.equals("messageReceived")) {
+                String cmd = intent.getStringExtra("cmd");
+                mCommandTv.setText(cmd);
             }
         }
     };
@@ -115,6 +133,8 @@ public class MainActivity extends Activity {
             showMultipleDevices();
         }
 
+        connected = false;
+
         mPairBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -140,8 +160,12 @@ public class MainActivity extends Activity {
         IntentFilter filter = new IntentFilter();
         filter.addAction(BluetoothAdapter.ACTION_SCAN_MODE_CHANGED);
         filter.addAction(BluetoothDevice.ACTION_BOND_STATE_CHANGED);
+        filter.addAction("streamsAcquired");
+        filter.addAction("disconnected");
+        filter.addAction("messageReceived");
 
         registerReceiver(mReceiver, filter);
+        LocalBroadcastManager.getInstance(this).registerReceiver(mReceiver, filter);
     }
 
     @Override
@@ -192,14 +216,14 @@ public class MainActivity extends Activity {
 
     private void showEnabled() {
         String name = mPairedBTDevice.getName();
-        mStatusTv.setText("Paired to " + name);
+        mStatusTv.setText("Paired to " + name + ", waiting for connection...");
         mStatusTv.setTextColor(Color.BLUE);
         mPairingProgressBar.setVisibility(View.INVISIBLE);
 
         mPairBtn.setText("UNPAIR");
         mPairBtn.setEnabled(true);
         mCommandTv.setVisibility(View.VISIBLE);
-        mCommandTv.setText("Waiting for command...");
+        mCommandTv.setText("");
     }
 
     private void showDisabled() {
@@ -219,6 +243,17 @@ public class MainActivity extends Activity {
         mCommandTv.setVisibility(View.INVISIBLE);
     }
 
+    private void showConnected() {
+        String name = mPairedBTDevice.getName();
+        mStatusTv.setText("Connected to " + name);
+        mStatusTv.setTextColor(Color.BLUE);
+        mPairingProgressBar.setVisibility(View.INVISIBLE);
+
+        mPairBtn.setText("UNPAIR");
+        mPairBtn.setEnabled(true);
+        mCommandTv.setVisibility(View.VISIBLE);
+        mCommandTv.setText("");
+    }
 
 
     private void hideProgress() {
