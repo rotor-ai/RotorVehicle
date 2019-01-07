@@ -2,7 +2,6 @@ package ai.rotor.rotorvehicle;
 
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
 import android.content.Context;
@@ -22,19 +21,10 @@ import static ai.rotor.rotorvehicle.RotorUtils.ROTOR_UUID;
 @SuppressLint("LogNotTimber")
 public class BluetoothService {
     private static String TAG =  "Debug, BluetoothService";
-    private BluetoothDevice mPairedDevice;
     private AcceptThread mAcceptThread;
     private ManageConnectedThread mManageConnectedThread;
     private BluetoothSocket mSocket;
     private Context mContext;
-
-    private interface MessageConstants {
-        public static final int MESSAGE_READ = 0;
-        public static final int MESSAGE_WRITE = 1;
-        public static final int MESSAGE_TOAST = 2;
-
-        // ... (Add other message types here as needed.)
-    }
 
     public void startClient(Context context) {
         mContext = context;
