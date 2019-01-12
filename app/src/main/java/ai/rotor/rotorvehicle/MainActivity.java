@@ -206,6 +206,10 @@ public class MainActivity extends Activity {
 
     class RotorBroadcastReceiver extends BroadcastReceiver {
 
+        private final String ACTION_STREAMS_ACQUIRED = "streamsAcquired";
+        private final String ACTION_DISCONNECTED = "disconnected";
+        private final String ACTION_MSG_RECEIVED = "messageReceived";
+
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
@@ -213,17 +217,21 @@ public class MainActivity extends Activity {
             if (BluetoothAdapter.ACTION_SCAN_MODE_CHANGED.equals(action)) {
                 int scanMode = intent.getIntExtra(BluetoothAdapter.EXTRA_SCAN_MODE, BluetoothAdapter.ERROR);
                 Timber.d("Scan mode value: %s", String.valueOf(scanMode));
-                if (scanMode == BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE) {
-                    showPairing();
-                } else if (scanMode == BluetoothAdapter.SCAN_MODE_CONNECTABLE) {
-                    hideProgress();
-                    mPairedDevices = mBluetoothAdapter.getBondedDevices();
-                    if (mPairedDevices == null || mPairedDevices.size() == 0) {
-                        showDisabled();
-                    } else if (mPairedDevices.size() == 1 && !connected) {
-                        mPairedBTDevice = mPairedDevices.iterator().next();
-                        showEnabled();
-                    }
+
+                switch (scanMode) {
+                    case BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE:
+                        showPairing();
+                        break;
+                    case BluetoothAdapter.SCAN_MODE_CONNECTABLE:
+                        hideProgress();
+                        mPairedDevices = mBluetoothAdapter.getBondedDevices();
+                        if (mPairedDevices == null || mPairedDevices.size() == 0) {
+                            showDisabled();
+                        } else if (mPairedDevices.size() == 1 && !connected) {
+                            mPairedBTDevice = mPairedDevices.iterator().next();
+                            showEnabled();
+                        }
+                        break;
                 }
             }
 
@@ -253,17 +261,17 @@ public class MainActivity extends Activity {
                 }
             }
 
-            if (action.equals("streamsAcquired")) {
+            if (ACTION_STREAMS_ACQUIRED.equals(action)) {
                 connected = true;
                 showConnected();
             }
 
-            if (action.equals("disconnected")) {
+            if (ACTION_DISCONNECTED.equals(action)) {
                 connected = false;
                 showEnabled();
             }
 
-            if (action.equals("messageReceived")) {
+            if (ACTION_MSG_RECEIVED.equals(action)) {
                 String cmd = intent.getStringExtra("cmd");
                 mCommandTv.setText(cmd);
             }
