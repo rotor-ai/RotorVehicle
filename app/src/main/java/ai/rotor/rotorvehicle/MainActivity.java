@@ -3,6 +3,7 @@ package ai.rotor.rotorvehicle;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -21,6 +22,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Set;
 
@@ -52,7 +54,7 @@ public class MainActivity extends Activity {
             Timber.d(action);
             if (BluetoothAdapter.ACTION_SCAN_MODE_CHANGED.equals(action)) {
                 int scanMode = intent.getIntExtra(BluetoothAdapter.EXTRA_SCAN_MODE, BluetoothAdapter.ERROR);
-                Timber.d("Scan mode value: " + String.valueOf(scanMode));
+                Timber.d("Scan mode value: %s", String.valueOf(scanMode));
                 if (scanMode == BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE) {
                     showPairing();
                 } else if (scanMode == BluetoothAdapter.SCAN_MODE_CONNECTABLE) {
@@ -117,7 +119,7 @@ public class MainActivity extends Activity {
         ButterKnife.bind(this);
         Timber.plant(debugTree);
 
-        Timber.d("onCreate, thread ID: " + Thread.currentThread().getId());
+        Timber.d("onCreate, thread ID: %s", Thread.currentThread().getId());
 
         // Setup GUI
         mPairingProgressBar.setVisibility(View.INVISIBLE);
@@ -263,11 +265,10 @@ public class MainActivity extends Activity {
 
     private void unpairDevice(BluetoothDevice device) {
         try {
-            Method m = device.getClass()
-                    .getMethod("removeBond", (Class[]) null);
+            Method m = device.getClass().getMethod("removeBond", (Class<?>) null);
             m.invoke(device, (Object[]) null);
-        } catch (Exception e) {
-            Timber.e(e.getMessage());
+        } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+            e.printStackTrace();
         }
     }
 
