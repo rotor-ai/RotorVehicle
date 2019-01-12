@@ -12,7 +12,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
-import android.support.v4.content.LocalBroadcastManager; //https://github.com/flutter/flutter-intellij/issues/966
+import androidx.localbroadcastmanager.content.LocalBroadcastManager; //https://github.com/flutter/flutter-intellij/issues/966
 
 
 
