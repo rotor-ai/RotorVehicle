@@ -10,6 +10,9 @@ import android.content.IntentFilter;
 import android.graphics.Color;
 import android.os.Bundle;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import butterknife.BindView;
+import butterknife.ButterKnife;
+
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -26,15 +29,17 @@ public class MainActivity extends Activity {
     private static final int REQUEST_ENABLE_BT = 2;
     private static final int REQUEST_PAIR_BT = 3;
     private static final int DISCOVERABLE_DURATION = 30;
-    private Button mPairBtn;
-    private TextView mStatusTv;
-    private TextView mCommandTv;
-    private ProgressBar mPairingProgressBar;
+
     private BluetoothAdapter mBluetoothAdapter;
     private BluetoothDevice mPairedBTDevice;
     private Set<BluetoothDevice> mPairedDevices;
     private BluetoothService mBluetoothService;
     private Boolean connected;
+
+    @BindView(R.id.pairBtn) Button mPairBtn;
+    @BindView(R.id.statusTv) TextView mStatusTv;
+    @BindView(R.id.commandTv) TextView mCommandTv;
+    @BindView(R.id.pairingProgressBar) ProgressBar mPairingProgressBar;
 
     private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
         private static final String TAG = "Debug";
@@ -108,19 +113,13 @@ public class MainActivity extends Activity {
         Log.d(TAG, "onCreate, thread ID: " + Thread.currentThread().getId());
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        ButterKnife.bind(this);
 
         // Setup GUI
-        mPairBtn = (Button) findViewById(R.id.pairBtn);
-        mStatusTv = (TextView) findViewById(R.id.statusTv);
-        mCommandTv = (TextView) findViewById(R.id.commandTv);
-        mPairingProgressBar = (ProgressBar) findViewById(R.id.pairingProgressBar);
         mPairingProgressBar.setVisibility(View.INVISIBLE);
 
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         mBluetoothAdapter.setName("Vehicle");
-        /*ActivityCompat.requestPermissions(this,
-                new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
-                MY_PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION);*/
 
         mPairedDevices = mBluetoothAdapter.getBondedDevices();
         if (mPairedDevices == null || mPairedDevices.size() == 0) {
@@ -253,7 +252,6 @@ public class MainActivity extends Activity {
         mCommandTv.setVisibility(View.VISIBLE);
         mCommandTv.setText("");
     }
-
 
     private void hideProgress() {
         mPairingProgressBar.setVisibility(View.INVISIBLE);
