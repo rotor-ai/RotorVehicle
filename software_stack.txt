@@ -1,0 +1,30 @@
+rotor.ai software stack
+=======================
+
+Layer-3: AI Agent (and/or) Mobile Client
+    
+    Responsibilities:
+        * Directing the vehicle where to go and what to actuate (turn left, accelerate, brake)
+        * Allow for Human to take control away from AI at any time.
+        * AI can only be engaged by Human.
+
+Layer-2: Raspberry Pi
+    
+    Responsibilities:
+        * Forwards inputs from Layer-3 to Layer-2
+        * Provide lightweight computation for the AI Agent
+        * Will eventually capture video data and forward info to the AI Agent
+        * On-board logging of everything that happens (like an airplane black box)
+
+Layer-1: Arduino + Speed controller
+
+    Responsibilities:
+        * Converts throttle and steering inputs from the RPI into usable PWM values for the hardware
+
+Layer-0: Motors/Servos/Actuators/Sensors
+
+    Responsibilities:
+        * Respond to electrical signals from the speed controller & Arduino
+        * Accurately take measurements for Layer-1 (example: ultrasonic sensors, gyroscope, accelerometer)
+
+Note: We will plan to allow constant values (like trim & calibration values) to be passed from Layer-3 all the way down to Layer-1.
