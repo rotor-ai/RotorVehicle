@@ -12,6 +12,7 @@ import android.os.Bundle;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import timber.log.Timber;
 
 import android.util.Log;
 import android.view.View;
@@ -35,6 +36,7 @@ public class MainActivity extends Activity {
     private Set<BluetoothDevice> mPairedDevices;
     private BluetoothService mBluetoothService;
     private Boolean connected;
+    private Timber.DebugTree debugTree = new Timber.DebugTree();
 
     @BindView(R.id.pairBtn) Button mPairBtn;
     @BindView(R.id.statusTv) TextView mStatusTv;
@@ -47,10 +49,10 @@ public class MainActivity extends Activity {
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
-            Log.d(TAG, action);
+            Timber.d(action);
             if (BluetoothAdapter.ACTION_SCAN_MODE_CHANGED.equals(action)) {
                 int scanMode = intent.getIntExtra(BluetoothAdapter.EXTRA_SCAN_MODE, BluetoothAdapter.ERROR);
-                Log.d(TAG, "Scan mode value: " + String.valueOf(scanMode));
+                Timber.d("Scan mode value: " + String.valueOf(scanMode));
                 if (scanMode == BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE) {
                     showPairing();
                 } else if (scanMode == BluetoothAdapter.SCAN_MODE_CONNECTABLE) {
@@ -69,7 +71,7 @@ public class MainActivity extends Activity {
                 BluetoothDevice mDevice = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
 
                 if (mDevice.getBondState() == BluetoothDevice.BOND_BONDED) {
-                    Log.d(TAG, "BroadcastReceiver: BOND_BONDED.");
+                    Timber.d("BroadcastReceiver: BOND_BONDED.");
                     mPairedBTDevice = mDevice;
                     showEnabled();
                     hideProgress();
@@ -77,10 +79,10 @@ public class MainActivity extends Activity {
                     mBluetoothService.startClient(MainActivity.this);
                 }
                 if (mDevice.getBondState() == BluetoothDevice.BOND_BONDING) {
-                    Log.d(TAG, "BroadcastReceiver: BOND_BONDING.");
+                    Timber.d("BroadcastReceiver: BOND_BONDING.");
                 }
                 if (mDevice.getBondState() == BluetoothDevice.BOND_NONE) {
-                    Log.d(TAG, "BroadcastReceiver: BOND_NONE.");
+                    Timber.d("BroadcastReceiver: BOND_NONE.");
                     mPairedDevices = mBluetoothAdapter.getBondedDevices();
                     if (mPairedDevices == null || mPairedDevices.size() == 0) {
                         showDisabled();
@@ -110,10 +112,12 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Log.d(TAG, "onCreate, thread ID: " + Thread.currentThread().getId());
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
+        Timber.plant(debugTree);
+
+        Timber.d("onCreate, thread ID: " + Thread.currentThread().getId());
 
         // Setup GUI
         mPairingProgressBar.setVisibility(View.INVISIBLE);
@@ -146,7 +150,7 @@ public class MainActivity extends Activity {
                     if (!mBluetoothAdapter.isEnabled()) {
                         Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
                         startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
-                        Log.d(TAG, "Starting enabling activity");
+                        Timber.d("Starting enabling activity");
                     } else {
                         makeDiscoverable();
                     }
@@ -175,19 +179,19 @@ public class MainActivity extends Activity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        Log.d(TAG, "OnActivityResult request code: " + String.valueOf(requestCode) + ", result code: " + String.valueOf(resultCode));
+        Timber.d("OnActivityResult request code: " + String.valueOf(requestCode) + ", result code: " + String.valueOf(resultCode));
 
         if (requestCode == REQUEST_ENABLE_BT) {
             if (resultCode == Activity.RESULT_CANCELED) {
-                Log.d(TAG, "OnActivityResult, enabling cancelled");
+                Timber.d("OnActivityResult, enabling cancelled");
                 showDisabled();
             } else {
-                Log.d(TAG, "OnActivityResult, enabled");
+                Timber.d("OnActivityResult, enabled");
                 makeDiscoverable();
             }
         } else if (requestCode == REQUEST_PAIR_BT) {
             if (resultCode == Activity.RESULT_CANCELED) {
-                Log.d(TAG, "OnActivityResult, discovery cancelled");
+                Timber.d("OnActivityResult, discovery cancelled");
                 showDisabled();
                 hideProgress();
             } else if (resultCode == Activity.RESULT_OK) {
@@ -204,7 +208,7 @@ public class MainActivity extends Activity {
     }
 
     private void showPairing() {
-        Log.d(TAG, "Show Pairing");
+        Timber.d("Show Pairing");
         mStatusTv.setText("starting discoverability...");
         mStatusTv.setTextColor(Color.GRAY);
         mPairingProgressBar.setVisibility(View.VISIBLE);
@@ -263,7 +267,7 @@ public class MainActivity extends Activity {
                     .getMethod("removeBond", (Class[]) null);
             m.invoke(device, (Object[]) null);
         } catch (Exception e) {
-            Log.e(TAG, e.getMessage());
+            Timber.e(e.getMessage());
         }
     }
 
