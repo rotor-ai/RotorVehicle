@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">RotorVehicle</string>
+    <string name="ui_pair">PAIR</string>
+    <string name="ui_unpair">UNPAIR</string>
+    <string name="ui_unpaired">UNPAIRED</string>
+    <string name="ui_starting_discoverability">starting discoverability…</string>
+    <string name="ui_too_many">Too many paired devices!</string>
 </resources>
