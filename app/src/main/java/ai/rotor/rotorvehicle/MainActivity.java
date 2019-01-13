@@ -273,6 +273,7 @@ public class MainActivity extends Activity {
 
             if (ACTION_MSG_RECEIVED.equals(action)) {
                 String cmd = intent.getStringExtra("cmd");
+
                 mCommandTv.setText(cmd);
             }
         }
