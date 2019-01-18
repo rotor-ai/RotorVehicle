@@ -12,6 +12,7 @@ import timber.log.Timber;
  */
 public class RotorCtlService {
     private static final String TAG = "RotorCtlServ";
+
     private double steerTrim, steerPWMMin, steerPWMMax, steerPWMVal;
     private double throtTrim, throtPWMMin, throtPWMMax, throtPWMVal;
     private int steerRev;

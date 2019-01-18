@@ -37,6 +37,7 @@ public class MainActivity extends Activity {
     private Boolean connected;
     private Timber.DebugTree debugTree = new Timber.DebugTree();
     private final BroadcastReceiver mReceiver = new RotorBroadcastReceiver();
+    private RotorI2cBus mRotorI2cBus;
 
     @BindView(R.id.pairBtn) Button mPairBtn;
     @BindView(R.id.statusTv) TextView mStatusTv;
@@ -74,7 +75,9 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View v) {
                 mPairedDevices = mBluetoothAdapter.getBondedDevices();
+                Timber.d("Pair button pressed");
                 if (mPairedDevices.size() > 0) {
+                    Timber.d("Still paired to devices: " + mPairedDevices);
                     for (BluetoothDevice device : mPairedDevices) {
                         unpairDevice(device);
                     }
@@ -134,6 +137,7 @@ public class MainActivity extends Activity {
     }
 
     private void makeDiscoverable() {
+        Timber.d("Making discoverable...");
         Intent discoverableIntent =
                 new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
         discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, DISCOVERABLE_DURATION);
@@ -196,7 +200,7 @@ public class MainActivity extends Activity {
 
     private void unpairDevice(BluetoothDevice device) {
         try {
-            Method m = device.getClass().getMethod("removeBond", (Class<?>) null);
+            Method m = device.getClass().getMethod("removeBond", (Class[]) null);
             m.invoke(device, (Object[]) null);
         } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
             e.printStackTrace();
@@ -264,6 +268,7 @@ public class MainActivity extends Activity {
             if (ACTION_STREAMS_ACQUIRED.equals(action)) {
                 connected = true;
                 showConnected();
+                mRotorI2cBus = new RotorI2cBus();
             }
 
             if (ACTION_DISCONNECTED.equals(action)) {
@@ -273,7 +278,9 @@ public class MainActivity extends Activity {
 
             if (ACTION_MSG_RECEIVED.equals(action)) {
                 String cmd = intent.getStringExtra("cmd");
+
                 mCommandTv.setText(cmd);
+                mRotorI2cBus.write(RotorUtils.ARDUINO_ADDRESS, cmd);
             }
         }
     }
