@@ -3,10 +3,19 @@ package ai.rotor.rotorvehicle;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGattServer;
+import android.bluetooth.BluetoothGattServerCallback;
+import android.bluetooth.BluetoothGattService;
+import android.bluetooth.BluetoothManager;
+import android.bluetooth.le.AdvertiseCallback;
+import android.bluetooth.le.AdvertiseData;
+import android.bluetooth.le.AdvertiseSettings;
+import android.bluetooth.le.BluetoothLeAdvertiser;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Bundle;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
@@ -14,6 +23,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import timber.log.Timber;
 
+import android.os.ParcelUuid;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ProgressBar;
@@ -23,6 +33,9 @@ import android.widget.TextView;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Set;
+import java.util.UUID;
+
+import static ai.rotor.rotorvehicle.RotorUtils.ROTOR_UUID;
 
 public class MainActivity extends Activity {
     private static final int MY_PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION = 1;
@@ -30,7 +43,7 @@ public class MainActivity extends Activity {
     private static final int REQUEST_PAIR_BT = 3;
     private static final int DISCOVERABLE_DURATION = 30;
 
-    private BluetoothAdapter mBluetoothAdapter;
+    private BluetoothManager mBluetoothManager;
     private BluetoothDevice mPairedBTDevice;
     private Set<BluetoothDevice> mPairedDevices;
     private BluetoothService mBluetoothService;
@@ -51,15 +64,17 @@ public class MainActivity extends Activity {
         ButterKnife.bind(this);
         Timber.plant(debugTree);
 
+        Timber.d("STUDEBUG Has BLE: " + getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE));
+
         Timber.d("onCreate, thread ID: %s", Thread.currentThread().getId());
 
         // Setup GUI
         mPairingProgressBar.setVisibility(View.INVISIBLE);
 
-        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        mBluetoothAdapter.setName("Vehicle");
+        mBluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
+        mBluetoothManager.getAdapter().setName("Vehicle");
 
-        mPairedDevices = mBluetoothAdapter.getBondedDevices();
+        mPairedDevices = mBluetoothManager.getAdapter().getBondedDevices();
         if (mPairedDevices == null || mPairedDevices.size() == 0) {
             showDisabled();
         } else if (mPairedDevices.size() == 1) {
@@ -74,7 +89,7 @@ public class MainActivity extends Activity {
         mPairBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mPairedDevices = mBluetoothAdapter.getBondedDevices();
+                mPairedDevices = mBluetoothManager.getAdapter().getBondedDevices();
                 Timber.d("Pair button pressed");
                 if (mPairedDevices.size() > 0) {
                     Timber.d("Still paired to devices: " + mPairedDevices);
@@ -83,7 +98,7 @@ public class MainActivity extends Activity {
                     }
                     showDisabled();
                 } else {
-                    if (!mBluetoothAdapter.isEnabled()) {
+                    if (!mBluetoothManager.getAdapter().isEnabled()) {
                         Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
                         startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
                         Timber.d("Starting enabling activity");
@@ -138,10 +153,44 @@ public class MainActivity extends Activity {
 
     private void makeDiscoverable() {
         Timber.d("Making discoverable...");
-        Intent discoverableIntent =
-                new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
-        discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, DISCOVERABLE_DURATION);
-        startActivityForResult(discoverableIntent, REQUEST_PAIR_BT);
+//        Intent discoverableIntent =
+//                new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
+//        discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, DISCOVERABLE_DURATION);
+//        startActivityForResult(discoverableIntent, REQUEST_PAIR_BT);
+
+        BluetoothLeAdvertiser advertiser = mBluetoothManager.getAdapter().getBluetoothLeAdvertiser();
+        GSCallback gsCallback = new GSCallback();
+        BluetoothGattServer gattServer = mBluetoothManager.openGattServer(this, gsCallback);
+        BluetoothGattService rotorService = new BluetoothGattService(ROTOR_UUID,BluetoothGattService.SERVICE_TYPE_PRIMARY);
+        gattServer.addService(rotorService);
+
+        AdvertiseSettings settings = new AdvertiseSettings
+                .Builder()
+                .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY)
+                .setConnectable(true)
+                .setTimeout(0)
+                .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_HIGH)
+                .build();
+        AdvertiseData advertiseData = new AdvertiseData
+                .Builder()
+                .setIncludeDeviceName(true)
+                .addServiceUuid(new ParcelUuid(rotorService.getUuid()))
+                .build();
+
+        advertiser.startAdvertising(settings, advertiseData, new AdvertiseCallback() {
+            @Override
+            public void onStartSuccess(AdvertiseSettings settingsInEffect) {
+                super.onStartSuccess(settingsInEffect);
+                Timber.d("STUDEBUG onStartSuccess");
+            }
+
+            @Override
+            public void onStartFailure(int errorCode) {
+                super.onStartFailure(errorCode);
+                Timber.d("STUDEBUG onStartFailure errorcode: " + errorCode);
+            }
+        });
+
     }
 
     private void showPairing() {
@@ -208,6 +257,10 @@ public class MainActivity extends Activity {
     }
 
 
+    class GSCallback extends BluetoothGattServerCallback {
+
+    }
+
     class RotorBroadcastReceiver extends BroadcastReceiver {
 
         private final String ACTION_STREAMS_ACQUIRED = "streamsAcquired";
@@ -228,7 +281,7 @@ public class MainActivity extends Activity {
                         break;
                     case BluetoothAdapter.SCAN_MODE_CONNECTABLE:
                         hideProgress();
-                        mPairedDevices = mBluetoothAdapter.getBondedDevices();
+                        mPairedDevices = mBluetoothManager.getAdapter().getBondedDevices();
                         if (mPairedDevices == null || mPairedDevices.size() == 0) {
                             showDisabled();
                         } else if (mPairedDevices.size() == 1 && !connected) {
@@ -255,7 +308,7 @@ public class MainActivity extends Activity {
                 }
                 if (mDevice.getBondState() == BluetoothDevice.BOND_NONE) {
                     Timber.d("BroadcastReceiver: BOND_NONE.");
-                    mPairedDevices = mBluetoothAdapter.getBondedDevices();
+                    mPairedDevices = mBluetoothManager.getAdapter().getBondedDevices();
                     if (mPairedDevices == null || mPairedDevices.size() == 0) {
                         showDisabled();
                     } else if (mPairedDevices.size() == 1) {
