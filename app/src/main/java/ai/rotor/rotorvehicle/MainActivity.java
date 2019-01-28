@@ -40,13 +40,16 @@ import static ai.rotor.rotorvehicle.RotorUtils.ROTOR_UUID;
 public class MainActivity extends Activity {
     private static final int MY_PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION = 1;
     private static final int REQUEST_ENABLE_BT = 2;
-    private static final int REQUEST_PAIR_BT = 3;
     private static final int DISCOVERABLE_DURATION = 30;
 
     private BluetoothManager mBluetoothManager;
     private BluetoothDevice mPairedBTDevice;
     private Set<BluetoothDevice> mPairedDevices;
     private BluetoothService mBluetoothService;
+    private BluetoothGattServer mGattServer;
+    private BluetoothLeAdvertiser mAdvertiser;
+    AdvertiseCallback mAdvertiserCallback;
+
     private Boolean connected;
     private Timber.DebugTree debugTree = new Timber.DebugTree();
     private final BroadcastReceiver mReceiver = new RotorBroadcastReceiver();
@@ -125,6 +128,14 @@ public class MainActivity extends Activity {
     protected void onDestroy() {
         super.onDestroy();
         unregisterReceiver(mReceiver);
+
+        //shutdown Bluetooth advertising and GATT server
+        if (mAdvertiser != null){
+            mAdvertiser.stopAdvertising(mAdvertiserCallback);
+        }
+        if (mGattServer != null){
+            mGattServer.close();
+        }
     }
 
     @Override
@@ -140,29 +151,32 @@ public class MainActivity extends Activity {
                 Timber.d("OnActivityResult, enabled");
                 makeDiscoverable();
             }
-        } else if (requestCode == REQUEST_PAIR_BT) {
-            if (resultCode == Activity.RESULT_CANCELED) {
-                Timber.d("OnActivityResult, discovery cancelled");
-                showDisabled();
-                hideProgress();
-            } else if (resultCode == Activity.RESULT_OK) {
-                showPairing();
-            }
         }
     }
 
     private void makeDiscoverable() {
         Timber.d("Making discoverable...");
-//        Intent discoverableIntent =
-//                new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
-//        discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, DISCOVERABLE_DURATION);
-//        startActivityForResult(discoverableIntent, REQUEST_PAIR_BT);
 
-        BluetoothLeAdvertiser advertiser = mBluetoothManager.getAdapter().getBluetoothLeAdvertiser();
+        mAdvertiser = mBluetoothManager.getAdapter().getBluetoothLeAdvertiser();
         GSCallback gsCallback = new GSCallback();
-        BluetoothGattServer gattServer = mBluetoothManager.openGattServer(this, gsCallback);
+        mGattServer = mBluetoothManager.openGattServer(this, gsCallback);
         BluetoothGattService rotorService = new BluetoothGattService(ROTOR_UUID,BluetoothGattService.SERVICE_TYPE_PRIMARY);
-        gattServer.addService(rotorService);
+        mGattServer.addService(rotorService);
+        mAdvertiserCallback = new AdvertiseCallback() {
+            @Override
+            public void onStartSuccess(AdvertiseSettings settingsInEffect) {
+                super.onStartSuccess(settingsInEffect);
+                showPairing();
+            }
+
+            @Override
+            public void onStartFailure(int errorCode) {
+                super.onStartFailure(errorCode);
+                showDisabled();
+                hideProgress();
+                Timber.d("Advertise.onStartFailure errorcode: " + errorCode);
+            }
+        };
 
         AdvertiseSettings settings = new AdvertiseSettings
                 .Builder()
@@ -177,21 +191,10 @@ public class MainActivity extends Activity {
                 .addServiceUuid(new ParcelUuid(rotorService.getUuid()))
                 .build();
 
-        advertiser.startAdvertising(settings, advertiseData, new AdvertiseCallback() {
-            @Override
-            public void onStartSuccess(AdvertiseSettings settingsInEffect) {
-                super.onStartSuccess(settingsInEffect);
-                Timber.d("STUDEBUG onStartSuccess");
-            }
-
-            @Override
-            public void onStartFailure(int errorCode) {
-                super.onStartFailure(errorCode);
-                Timber.d("STUDEBUG onStartFailure errorcode: " + errorCode);
-            }
-        });
-
+        mAdvertiser.startAdvertising(settings, advertiseData, mAdvertiserCallback);
     }
+
+
 
     private void showPairing() {
         Timber.d("Show Pairing");
