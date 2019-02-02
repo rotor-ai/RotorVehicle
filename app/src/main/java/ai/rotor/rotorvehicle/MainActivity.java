@@ -55,7 +55,6 @@ public class MainActivity extends Activity {
 
         // Setup GUI
         mPairingProgressBar.setVisibility(View.INVISIBLE);
-
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         mBluetoothAdapter.setName("Vehicle");
 
