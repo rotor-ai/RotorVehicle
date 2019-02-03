@@ -25,9 +25,9 @@ public class BluetoothService {
     private ManageConnectedThread mManageConnectedThread;
     private BluetoothSocket mSocket;
     private Context mContext;
-    private RotorUtils.STATE mRotorState;
+    private RotorUtils.State mRotorState;
 
-    public void startClient(Context context, RotorUtils.STATE state) {
+    public void startClient(Context context, RotorUtils.State state) {
         mContext = context;
         Log.d(TAG, "Starting accept thread...");
         mAcceptThread = new AcceptThread();

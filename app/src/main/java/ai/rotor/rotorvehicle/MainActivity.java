@@ -38,7 +38,7 @@ public class MainActivity extends Activity {
     private Timber.DebugTree debugTree = new Timber.DebugTree();
     private final BroadcastReceiver mReceiver = new RotorBroadcastReceiver();
     private RotorI2cBus mRotorI2cBus;
-    private RotorUtils.STATE mRotorState;
+    private RotorUtils.State mRotorState;
 
     @BindView(R.id.pairBtn) Button mPairBtn;
     @BindView(R.id.statusTv) TextView mStatusTv;
@@ -105,7 +105,7 @@ public class MainActivity extends Activity {
         registerReceiver(mReceiver, filter);
         LocalBroadcastManager.getInstance(this).registerReceiver(mReceiver, filter);
 
-        mRotorState = RotorUtils.STATE.HOMED;
+        mRotorState = RotorUtils.State.HOMED;
     }
 
     @Override
