@@ -15,46 +15,62 @@ public class RotorCtlServiceTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void transHomedToHomed() {
-        RotorCtlService.State initialState = RotorCtlService.State.HOMED;
-        RotorCtlService.State returnState = RotorCtlService.setState(initialState, RotorCtlService.StateChangeRequest.TO_HOMED);
+        RotorCtlService rotorCtlService = new RotorCtlService();
+        rotorCtlService.setState(RotorCtlService.StateChangeRequest.TO_HOMED);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void transManToMan() {
-        RotorCtlService.State initialState = RotorCtlService.State.MANUAL;
-        RotorCtlService.State returnState = RotorCtlService.setState(initialState, RotorCtlService.StateChangeRequest.TO_MANUAL);
+        RotorCtlService rotorCtlService = new RotorCtlService();
+        rotorCtlService.setState(RotorCtlService.StateChangeRequest.TO_MANUAL);
+        rotorCtlService.setState(RotorCtlService.StateChangeRequest.TO_MANUAL);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void transAutoToAuto() {
-        RotorCtlService.State initialState = RotorCtlService.State.AUTONOMOUS;
-        RotorCtlService.State returnState = RotorCtlService.setState(initialState, RotorCtlService.StateChangeRequest.TO_AUTONOMOUS);
+        RotorCtlService rotorCtlService = new RotorCtlService();
+        rotorCtlService.setState(RotorCtlService.StateChangeRequest.TO_AUTONOMOUS);
+        rotorCtlService.setState(RotorCtlService.StateChangeRequest.TO_AUTONOMOUS);
     }
 
     @Test
     public void transHomedToMan() {
-        RotorCtlService.State initialState = RotorCtlService.State.HOMED;
-        RotorCtlService.State returnState = RotorCtlService.setState(initialState, RotorCtlService.StateChangeRequest.TO_MANUAL);
-        assertEquals(returnState, RotorCtlService.State.MANUAL);
+        RotorCtlService rotorCtlService = new RotorCtlService();
+        RotorCtlService.State initialState = rotorCtlService.getRotorState();
+        assertEquals(initialState, RotorCtlService.State.HOMED);
+
+        rotorCtlService.setState(RotorCtlService.StateChangeRequest.TO_MANUAL);
+        assertEquals(rotorCtlService.getRotorState(), RotorCtlService.State.MANUAL);
     }
 
     @Test
     public void transHomedToAuto() {
-        RotorCtlService.State initialState = RotorCtlService.State.HOMED;
-        RotorCtlService.State returnState = RotorCtlService.setState(initialState, RotorCtlService.StateChangeRequest.TO_AUTONOMOUS);
-        assertEquals(returnState, RotorCtlService.State.AUTONOMOUS);
+        RotorCtlService rotorCtlService = new RotorCtlService();
+        assertEquals(rotorCtlService.getRotorState(), RotorCtlService.State.HOMED);
+
+        rotorCtlService.setState(RotorCtlService.StateChangeRequest.TO_AUTONOMOUS);
+        assertEquals(rotorCtlService.getRotorState(), RotorCtlService.State.AUTONOMOUS);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void transManToAuto() {
-        RotorCtlService.State initialState = RotorCtlService.State.MANUAL;
-        RotorCtlService.State returnState = RotorCtlService.setState(initialState, RotorCtlService.StateChangeRequest.TO_AUTONOMOUS);
+        RotorCtlService rotorCtlService = new RotorCtlService();
+        rotorCtlService.setState(RotorCtlService.StateChangeRequest.TO_MANUAL);
+        rotorCtlService.setState(RotorCtlService.StateChangeRequest.TO_AUTONOMOUS);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void transAutoToMan() {
-        RotorCtlService.State initialState = RotorCtlService.State.AUTONOMOUS;
-        RotorCtlService.State returnState = RotorCtlService.setState(initialState, RotorCtlService.StateChangeRequest.TO_MANUAL);
+        RotorCtlService rotorCtlService = new RotorCtlService();
+        rotorCtlService.setState(RotorCtlService.StateChangeRequest.TO_AUTONOMOUS);
+        rotorCtlService.setState(RotorCtlService.StateChangeRequest.TO_MANUAL);
     }
 
+    @Test
+    public void verifyImmutable() {
+        RotorCtlService rotorCtlService = new RotorCtlService();
+        RotorCtlService.State initialState = rotorCtlService.getRotorState();
+        initialState = RotorCtlService.State.AUTONOMOUS;
+        assertEquals(rotorCtlService.getRotorState(), RotorCtlService.State.HOMED);
+    }
 }

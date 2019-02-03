@@ -2,7 +2,7 @@ package ai.rotor.rotorvehicle;
 
 public class RotorCtlService extends Thread {
     private final static String TAG = "RotorCTLService";
-    State mRotorState;
+    private State mRotorState;
 
     enum State {
         HOMED,
@@ -20,21 +20,29 @@ public class RotorCtlService extends Thread {
         mRotorState = State.HOMED;
     }
 
-    public static State setState(State initialState, StateChangeRequest stateChangeRequest) throws IllegalArgumentException {
-        switch(initialState) {
+    public State getRotorState() {
+        return mRotorState;
+    }
+
+
+    public void setState(StateChangeRequest stateChangeRequest) throws IllegalArgumentException {
+        switch(mRotorState) {
             case HOMED:
                 switch (stateChangeRequest) {
                     case TO_HOMED:
                         throw new IllegalArgumentException("Already in the homed state");
                     case TO_AUTONOMOUS:
-                        return State.AUTONOMOUS;
+                        mRotorState = State.AUTONOMOUS;
+                        return;
                     case TO_MANUAL:
-                        return State.MANUAL;
+                        mRotorState = State.MANUAL;
+                        return;
                 }
             case MANUAL:
                 switch (stateChangeRequest) {
                     case TO_HOMED:
-                        return State.HOMED;
+                        mRotorState = State.HOMED;
+                        return;
                     case TO_AUTONOMOUS:
                         throw new IllegalArgumentException("Cannot move directly to autonomous mode from manual");
                     case TO_MANUAL:
@@ -43,7 +51,8 @@ public class RotorCtlService extends Thread {
             case AUTONOMOUS:
                 switch (stateChangeRequest) {
                     case TO_HOMED:
-                        return State.HOMED;
+                        mRotorState = State.HOMED;
+                        return;
                     case TO_AUTONOMOUS:
                         throw new IllegalArgumentException("Already in autonomous mode");
                     case TO_MANUAL:
@@ -51,6 +60,5 @@ public class RotorCtlService extends Thread {
                 }
 
         }
-        return initialState;
     }
 }
