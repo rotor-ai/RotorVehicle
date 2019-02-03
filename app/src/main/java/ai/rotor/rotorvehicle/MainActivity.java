@@ -38,6 +38,7 @@ public class MainActivity extends Activity {
     private Timber.DebugTree debugTree = new Timber.DebugTree();
     private final BroadcastReceiver mReceiver = new RotorBroadcastReceiver();
     private RotorI2cBus mRotorI2cBus;
+    private RotorUtils.STATE mRotorState;
 
     @BindView(R.id.pairBtn) Button mPairBtn;
     @BindView(R.id.statusTv) TextView mStatusTv;
@@ -103,6 +104,8 @@ public class MainActivity extends Activity {
 
         registerReceiver(mReceiver, filter);
         LocalBroadcastManager.getInstance(this).registerReceiver(mReceiver, filter);
+
+        mRotorState = RotorUtils.STATE.HOMED;
     }
 
     @Override
@@ -247,7 +250,7 @@ public class MainActivity extends Activity {
                     showEnabled();
                     hideProgress();
                     mBluetoothService = new BluetoothService();
-                    mBluetoothService.startClient(MainActivity.this);
+                    mBluetoothService.startClient(MainActivity.this, mRotorState);
                 }
                 if (mDevice.getBondState() == BluetoothDevice.BOND_BONDING) {
                     Timber.d("BroadcastReceiver: BOND_BONDING.");

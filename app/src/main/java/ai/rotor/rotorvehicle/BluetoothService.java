@@ -25,12 +25,14 @@ public class BluetoothService {
     private ManageConnectedThread mManageConnectedThread;
     private BluetoothSocket mSocket;
     private Context mContext;
+    private RotorUtils.STATE mRotorState;
 
-    public void startClient(Context context) {
+    public void startClient(Context context, RotorUtils.STATE state) {
         mContext = context;
         Log.d(TAG, "Starting accept thread...");
         mAcceptThread = new AcceptThread();
         mAcceptThread.start();
+        mRotorState = state;
     }
 
     /**
@@ -99,8 +101,6 @@ public class BluetoothService {
         private final OutputStream mOutStream;
         private byte[] mBuffer;
 
-        private RotorUtils.STATE mState;
-
         public ManageConnectedThread() {
             Log.d(TAG, "acquiring input and output streams...");
             InputStream tmpIn = null;
@@ -124,8 +124,6 @@ public class BluetoothService {
 
             Intent streamsAcquiredIntent = new Intent("streamsAcquired");
             LocalBroadcastManager.getInstance(mContext).sendBroadcast(streamsAcquiredIntent);
-
-            mState = RotorUtils.STATE.valueOf("MANUAL");
         }
 
         public void run() {
