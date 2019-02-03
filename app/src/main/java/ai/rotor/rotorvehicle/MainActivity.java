@@ -37,7 +37,6 @@ public class MainActivity extends Activity {
     private Boolean connected;
     private Timber.DebugTree debugTree = new Timber.DebugTree();
     private final BroadcastReceiver mReceiver = new RotorBroadcastReceiver();
-    private RotorI2cBus mRotorI2cBus;
 
     @BindView(R.id.pairBtn) Button mPairBtn;
     @BindView(R.id.statusTv) TextView mStatusTv;
@@ -97,12 +96,14 @@ public class MainActivity extends Activity {
         IntentFilter filter = new IntentFilter();
         filter.addAction(BluetoothAdapter.ACTION_SCAN_MODE_CHANGED);
         filter.addAction(BluetoothDevice.ACTION_BOND_STATE_CHANGED);
-        filter.addAction("streamsAcquired");
-        filter.addAction("disconnected");
-        filter.addAction("messageReceived");
+        filter.addAction(RotorUtils.ACTION_STREAMS_ACQUIRED);
+        filter.addAction(RotorUtils.ACTION_DISCONNECTED);
 
-        registerReceiver(mReceiver, filter);
         LocalBroadcastManager.getInstance(this).registerReceiver(mReceiver, filter);
+
+        // Start the Rotor control service thread
+        RotorCtlService rotorCtlService = new RotorCtlService(this);
+        rotorCtlService.run();
         }
 
     @Override
@@ -209,10 +210,6 @@ public class MainActivity extends Activity {
 
     class RotorBroadcastReceiver extends BroadcastReceiver {
 
-        private final String ACTION_STREAMS_ACQUIRED = "streamsAcquired";
-        private final String ACTION_DISCONNECTED = "disconnected";
-        private final String ACTION_MSG_RECEIVED = "messageReceived";
-
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
@@ -264,22 +261,20 @@ public class MainActivity extends Activity {
                 }
             }
 
-            if (ACTION_STREAMS_ACQUIRED.equals(action)) {
+            if (RotorUtils.ACTION_STREAMS_ACQUIRED.equals(action)) {
                 connected = true;
                 showConnected();
-                mRotorI2cBus = new RotorI2cBus();
             }
 
-            if (ACTION_DISCONNECTED.equals(action)) {
+            if (RotorUtils.ACTION_DISCONNECTED.equals(action)) {
                 connected = false;
                 showEnabled();
             }
 
-            if (ACTION_MSG_RECEIVED.equals(action)) {
-                String cmd = intent.getStringExtra("cmd");
+            if (RotorUtils.ACTION_MESSAGE_RECEIVED.equals(action)) {
+                String cmd = intent.getStringExtra(RotorUtils.EXTRA_CMD);
 
                 mCommandTv.setText(cmd);
-                mRotorI2cBus.write(RotorUtils.ARDUINO_ADDRESS, cmd);
             }
         }
     }

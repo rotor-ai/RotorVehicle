@@ -1,10 +1,13 @@
 package ai.rotor.rotorvehicle;
 
+import android.content.Context;
+
 import org.junit.Test;
 
 import static org.junit.Assert.*;
 
 public class RotorCtlServiceTest {
+    private Context testCtx;
 
     @Test
     public void hasCorrectStates() {
@@ -15,27 +18,27 @@ public class RotorCtlServiceTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void transHomedToHomed() {
-        RotorCtlService rotorCtlService = new RotorCtlService();
+        RotorCtlService rotorCtlService = new RotorCtlService(null);
         rotorCtlService.setState(RotorCtlService.StateChangeRequest.TO_HOMED);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void transManToMan() {
-        RotorCtlService rotorCtlService = new RotorCtlService();
+        RotorCtlService rotorCtlService = new RotorCtlService(null);
         rotorCtlService.setState(RotorCtlService.StateChangeRequest.TO_MANUAL);
         rotorCtlService.setState(RotorCtlService.StateChangeRequest.TO_MANUAL);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void transAutoToAuto() {
-        RotorCtlService rotorCtlService = new RotorCtlService();
+        RotorCtlService rotorCtlService = new RotorCtlService(null);
         rotorCtlService.setState(RotorCtlService.StateChangeRequest.TO_AUTONOMOUS);
         rotorCtlService.setState(RotorCtlService.StateChangeRequest.TO_AUTONOMOUS);
     }
 
     @Test
     public void transHomedToMan() {
-        RotorCtlService rotorCtlService = new RotorCtlService();
+        RotorCtlService rotorCtlService = new RotorCtlService(null);
         RotorCtlService.State initialState = rotorCtlService.getRotorState();
         assertEquals(initialState, RotorCtlService.State.HOMED);
 
@@ -45,7 +48,7 @@ public class RotorCtlServiceTest {
 
     @Test
     public void transHomedToAuto() {
-        RotorCtlService rotorCtlService = new RotorCtlService();
+        RotorCtlService rotorCtlService = new RotorCtlService(null);
         assertEquals(rotorCtlService.getRotorState(), RotorCtlService.State.HOMED);
 
         rotorCtlService.setState(RotorCtlService.StateChangeRequest.TO_AUTONOMOUS);
@@ -54,21 +57,21 @@ public class RotorCtlServiceTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void transManToAuto() {
-        RotorCtlService rotorCtlService = new RotorCtlService();
+        RotorCtlService rotorCtlService = new RotorCtlService(null);
         rotorCtlService.setState(RotorCtlService.StateChangeRequest.TO_MANUAL);
         rotorCtlService.setState(RotorCtlService.StateChangeRequest.TO_AUTONOMOUS);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void transAutoToMan() {
-        RotorCtlService rotorCtlService = new RotorCtlService();
+        RotorCtlService rotorCtlService = new RotorCtlService(null);
         rotorCtlService.setState(RotorCtlService.StateChangeRequest.TO_AUTONOMOUS);
         rotorCtlService.setState(RotorCtlService.StateChangeRequest.TO_MANUAL);
     }
 
     @Test
     public void verifyImmutable() {
-        RotorCtlService rotorCtlService = new RotorCtlService();
+        RotorCtlService rotorCtlService = new RotorCtlService(null);
         RotorCtlService.State initialState = rotorCtlService.getRotorState();
         initialState = RotorCtlService.State.AUTONOMOUS;
         assertEquals(rotorCtlService.getRotorState(), RotorCtlService.State.HOMED);
