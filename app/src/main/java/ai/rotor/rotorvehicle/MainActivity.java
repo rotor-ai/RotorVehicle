@@ -37,11 +37,14 @@ public class MainActivity extends Activity {
     private Boolean connected;
     private Timber.DebugTree debugTree = new Timber.DebugTree();
     private final BroadcastReceiver mReceiver = new RotorBroadcastReceiver();
+    private RotorCtlService mRotorCtlService;
 
     @BindView(R.id.pairBtn) Button mPairBtn;
     @BindView(R.id.statusTv) TextView mStatusTv;
     @BindView(R.id.commandTv) TextView mCommandTv;
     @BindView(R.id.pairingProgressBar) ProgressBar mPairingProgressBar;
+    @BindView(R.id.autoBtn) Button mAutoBtn;
+    @BindView(R.id.autoStatusTv) TextView mAutoStatusTv;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,6 +72,11 @@ public class MainActivity extends Activity {
 
         connected = false;
 
+        // Start the Rotor control service thread
+        mRotorCtlService = new RotorCtlService(this);
+        mRotorCtlService.run();
+        updateAutoBtnStyle();
+
         mPairBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -93,17 +101,27 @@ public class MainActivity extends Activity {
             }
         });
 
+        mAutoBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mRotorCtlService.getRotorState() == RotorCtlService.State.HOMED) {
+                    mRotorCtlService.setState(RotorCtlService.StateChangeRequest.TO_AUTONOMOUS);
+                } else {
+                    mRotorCtlService.setState(RotorCtlService.StateChangeRequest.TO_HOMED);
+                }
+                updateAutoBtnStyle();
+            }
+        });
+
         IntentFilter filter = new IntentFilter();
         filter.addAction(BluetoothAdapter.ACTION_SCAN_MODE_CHANGED);
         filter.addAction(BluetoothDevice.ACTION_BOND_STATE_CHANGED);
         filter.addAction(RotorUtils.ACTION_STREAMS_ACQUIRED);
         filter.addAction(RotorUtils.ACTION_DISCONNECTED);
 
+        registerReceiver(mReceiver, filter);
         LocalBroadcastManager.getInstance(this).registerReceiver(mReceiver, filter);
 
-        // Start the Rotor control service thread
-        RotorCtlService rotorCtlService = new RotorCtlService(this);
-        rotorCtlService.run();
         }
 
     @Override
@@ -155,7 +173,7 @@ public class MainActivity extends Activity {
 
     private void showEnabled() {
         String name = mPairedBTDevice.getName();
-        mStatusTv.setText("Paired to " + name + ", waiting for connection...");
+        mStatusTv.setText("Bluetooth state: Paired to " + name + ", waiting for connection...");
         mStatusTv.setTextColor(Color.BLUE);
         mPairingProgressBar.setVisibility(View.INVISIBLE);
 
@@ -166,7 +184,7 @@ public class MainActivity extends Activity {
     }
 
     private void showDisabled() {
-        mStatusTv.setText(getString(R.string.ui_unpaired));
+        mStatusTv.setText("Bluetooth state: UNPAIRED");
         mStatusTv.setTextColor(Color.GRAY);
 
         mPairBtn.setText(getString(R.string.ui_pair));
@@ -184,7 +202,7 @@ public class MainActivity extends Activity {
 
     private void showConnected() {
         String name = mPairedBTDevice.getName();
-        mStatusTv.setText("Connected to " + name);
+        mStatusTv.setText("Bluetooth state: Connected to " + name);
         mStatusTv.setTextColor(Color.BLUE);
         mPairingProgressBar.setVisibility(View.INVISIBLE);
 
@@ -192,6 +210,31 @@ public class MainActivity extends Activity {
         mPairBtn.setEnabled(true);
         mCommandTv.setVisibility(View.VISIBLE);
         mCommandTv.setText("");
+    }
+
+    private void updateAutoBtnStyle() {
+        if (mRotorCtlService.getRotorState() == RotorCtlService.State.HOMED) {
+            showHomed();
+        } else if (mRotorCtlService.getRotorState() == RotorCtlService.State.MANUAL) {
+            showManual();
+        } else {
+            showAuto();
+        }
+    }
+
+    private void showHomed() {
+        mAutoStatusTv.setText("Rotor State: " + mRotorCtlService.getRotorState());
+        mAutoBtn.setText("AUTO MODE!");
+    }
+
+    private void showAuto() {
+        mAutoStatusTv.setText("Rotor State: " + mRotorCtlService.getRotorState());
+        mAutoBtn.setText("HOME ROTOR");
+    }
+
+    private void showManual() {
+        mAutoStatusTv.setText("Rotor State: " + mRotorCtlService.getRotorState());
+        mAutoBtn.setText("HOME ROTOR");
     }
 
     private void hideProgress() {
@@ -213,7 +256,7 @@ public class MainActivity extends Activity {
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
-            Timber.d(action);
+            Timber.d("In onReceive, action: " + action);
             if (BluetoothAdapter.ACTION_SCAN_MODE_CHANGED.equals(action)) {
                 int scanMode = intent.getIntExtra(BluetoothAdapter.EXTRA_SCAN_MODE, BluetoothAdapter.ERROR);
                 Timber.d("Scan mode value: %s", String.valueOf(scanMode));
@@ -263,12 +306,17 @@ public class MainActivity extends Activity {
 
             if (RotorUtils.ACTION_STREAMS_ACQUIRED.equals(action)) {
                 connected = true;
+                mRotorCtlService.setState(RotorCtlService.StateChangeRequest.TO_HOMED);
+                mRotorCtlService.setState(RotorCtlService.StateChangeRequest.TO_MANUAL);
                 showConnected();
+                updateAutoBtnStyle();
             }
 
             if (RotorUtils.ACTION_DISCONNECTED.equals(action)) {
                 connected = false;
+                mRotorCtlService.setState(RotorCtlService.StateChangeRequest.TO_HOMED);
                 showEnabled();
+                updateAutoBtnStyle();
             }
 
             if (RotorUtils.ACTION_MESSAGE_RECEIVED.equals(action)) {
