@@ -105,11 +105,10 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View v) {
                 if (mRotorCtlService.getRotorState() == RotorCtlService.State.HOMED) {
-                    mRotorCtlService.setState(RotorCtlService.StateChangeRequest.TO_AUTONOMOUS);
+                    goToAuto();
                 } else {
-                    mRotorCtlService.setState(RotorCtlService.StateChangeRequest.TO_HOMED);
+                    goToHomed();
                 }
-                updateAutoBtnStyle();
             }
         });
 
@@ -118,6 +117,7 @@ public class MainActivity extends Activity {
         filter.addAction(BluetoothDevice.ACTION_BOND_STATE_CHANGED);
         filter.addAction(RotorUtils.ACTION_STREAMS_ACQUIRED);
         filter.addAction(RotorUtils.ACTION_DISCONNECTED);
+        filter.addAction(RotorUtils.ACTION_MESSAGE_RECEIVED);
 
         registerReceiver(mReceiver, filter);
         LocalBroadcastManager.getInstance(this).registerReceiver(mReceiver, filter);
@@ -250,6 +250,24 @@ public class MainActivity extends Activity {
         }
     }
 
+    private void goToAuto() {
+        Timber.d("Going to autonomous mode...");
+        mRotorCtlService.setState(RotorCtlService.StateChangeRequest.TO_AUTONOMOUS);
+        updateAutoBtnStyle();
+    }
+
+    private void goToHomed() {
+        Timber.d("Homing...");
+        mRotorCtlService.setState(RotorCtlService.StateChangeRequest.TO_HOMED);
+        updateAutoBtnStyle();
+    }
+
+    private void goToManual() {
+        Timber.d("Going to manual mode...");
+        mRotorCtlService.setState(RotorCtlService.StateChangeRequest.TO_MANUAL);
+        updateAutoBtnStyle();
+    }
+
 
     class RotorBroadcastReceiver extends BroadcastReceiver {
 
@@ -264,6 +282,7 @@ public class MainActivity extends Activity {
                 switch (scanMode) {
                     case BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE:
                         showPairing();
+                        goToHomed();
                         break;
                     case BluetoothAdapter.SCAN_MODE_CONNECTABLE:
                         hideProgress();
@@ -306,26 +325,32 @@ public class MainActivity extends Activity {
 
             if (RotorUtils.ACTION_STREAMS_ACQUIRED.equals(action)) {
                 connected = true;
-                mRotorCtlService.setState(RotorCtlService.StateChangeRequest.TO_HOMED);
-                mRotorCtlService.setState(RotorCtlService.StateChangeRequest.TO_MANUAL);
                 showConnected();
-                updateAutoBtnStyle();
+                goToManual();
             }
 
             if (RotorUtils.ACTION_DISCONNECTED.equals(action)) {
                 connected = false;
-                mRotorCtlService.setState(RotorCtlService.StateChangeRequest.TO_HOMED);
                 showEnabled();
-                updateAutoBtnStyle();
+                goToHomed();
             }
 
             if (RotorUtils.ACTION_MESSAGE_RECEIVED.equals(action)) {
                 String cmd = intent.getStringExtra(RotorUtils.EXTRA_CMD);
 
+                if (cmd.charAt(0) == '_') {
+                    if (cmd.charAt(1) == 'A') {
+                        goToHomed();
+                        goToAuto();
+                    } else {
+                        goToHomed();
+                        goToManual();
+                    }
+                    return;
+                }
+                mRotorCtlService.sendCommand(cmd);
                 mCommandTv.setText(cmd);
             }
         }
     }
-
 }
-

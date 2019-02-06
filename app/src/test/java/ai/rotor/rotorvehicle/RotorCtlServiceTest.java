@@ -16,26 +16,6 @@ public class RotorCtlServiceTest {
         assert (RotorCtlService.State.valueOf("HOMED") != null);
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void transHomedToHomed() {
-        RotorCtlService rotorCtlService = new RotorCtlService(null);
-        rotorCtlService.setState(RotorCtlService.StateChangeRequest.TO_HOMED);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void transManToMan() {
-        RotorCtlService rotorCtlService = new RotorCtlService(null);
-        rotorCtlService.setState(RotorCtlService.StateChangeRequest.TO_MANUAL);
-        rotorCtlService.setState(RotorCtlService.StateChangeRequest.TO_MANUAL);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void transAutoToAuto() {
-        RotorCtlService rotorCtlService = new RotorCtlService(null);
-        rotorCtlService.setState(RotorCtlService.StateChangeRequest.TO_AUTONOMOUS);
-        rotorCtlService.setState(RotorCtlService.StateChangeRequest.TO_AUTONOMOUS);
-    }
-
     @Test
     public void transHomedToMan() {
         RotorCtlService rotorCtlService = new RotorCtlService(null);

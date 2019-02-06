@@ -13,7 +13,6 @@ public class RotorCtlService extends Thread {
     private State mRotorState;
     private RotorI2cBus mRotorI2cBus;
     private Context mContext;
-    private final BroadcastReceiver mReceiver = new RotorCtlService.RotorBroadcastReceiver();
 
     enum State {
         HOMED,
@@ -34,11 +33,7 @@ public class RotorCtlService extends Thread {
     }
 
     public void run() {
-        // Adding all filter actions in run() for testability
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(RotorUtils.ACTION_MESSAGE_RECEIVED);
         mRotorI2cBus = new RotorI2cBus();
-        LocalBroadcastManager.getInstance(mContext).registerReceiver(mReceiver, filter);
     }
 
     public State getRotorState() {
@@ -51,7 +46,7 @@ public class RotorCtlService extends Thread {
             case HOMED:
                 switch (stateChangeRequest) {
                     case TO_HOMED:
-                        throw new IllegalArgumentException("Already in the homed state");
+                        return;
                     case TO_AUTONOMOUS:
                         mRotorState = State.AUTONOMOUS;
                         return;
@@ -67,7 +62,7 @@ public class RotorCtlService extends Thread {
                     case TO_AUTONOMOUS:
                         throw new IllegalArgumentException("Cannot move directly to autonomous mode from manual");
                     case TO_MANUAL:
-                        throw new IllegalArgumentException("Already in manual mode");
+                        return;
                 }
             case AUTONOMOUS:
                 switch (stateChangeRequest) {
@@ -75,7 +70,7 @@ public class RotorCtlService extends Thread {
                         mRotorState = State.HOMED;
                         return;
                     case TO_AUTONOMOUS:
-                        throw new IllegalArgumentException("Already in autonomous mode");
+                        return;
                     case TO_MANUAL:
                         throw new IllegalArgumentException("Cannot move directly to manual mode from autonomous");
                 }
@@ -83,18 +78,7 @@ public class RotorCtlService extends Thread {
         }
     }
 
-    class RotorBroadcastReceiver extends BroadcastReceiver {
-
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            Timber.d(action);
-
-            if (RotorUtils.ACTION_MESSAGE_RECEIVED.equals(action)) {
-                String cmd = intent.getStringExtra("cmd");
-
-                mRotorI2cBus.write(RotorUtils.ARDUINO_ADDRESS, cmd);
-            }
-        }
+    public void sendCommand(String cmd) {
+        mRotorI2cBus.write(RotorUtils.ARDUINO_ADDRESS, cmd);
     }
 }
