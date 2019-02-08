@@ -36,39 +36,18 @@ public class RotorCtlService extends Thread {
 
 
     public void setState(State stateChangeRequest) throws IllegalArgumentException {
-        switch(mRotorState) {
-            case HOMED:
-                switch (stateChangeRequest) {
-                    case HOMED:
-                        return;
-                    case AUTONOMOUS:
-                        mRotorState = State.AUTONOMOUS;
-                        return;
-                    case MANUAL:
-                        mRotorState = State.MANUAL;
-                        return;
-                }
-            case MANUAL:
-                switch (stateChangeRequest) {
-                    case HOMED:
-                        mRotorState = State.HOMED;
-                        return;
-                    case AUTONOMOUS:
-                        throw new IllegalArgumentException("Cannot move directly to autonomous mode from manual");
-                    case MANUAL:
-                        return;
-                }
-            case AUTONOMOUS:
-                switch (stateChangeRequest) {
-                    case HOMED:
-                        mRotorState = State.HOMED;
-                        return;
-                    case AUTONOMOUS:
-                        return;
-                    case MANUAL:
-                        throw new IllegalArgumentException("Cannot move directly to manual mode from autonomous");
-                }
 
+
+        if (mRotorState == State.MANUAL && stateChangeRequest == State.AUTONOMOUS) {
+            throw new IllegalArgumentException("Cannot move directly to autonomous mode from manual");
+        }
+
+        if (mRotorState == State.AUTONOMOUS && stateChangeRequest == State.MANUAL) {
+            throw new IllegalArgumentException("Cannot move directly to manual mode from autonomous");
+        }
+
+        if (mRotorState != stateChangeRequest){
+            mRotorState = stateChangeRequest;
         }
     }
 
