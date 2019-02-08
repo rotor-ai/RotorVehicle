@@ -252,19 +252,19 @@ public class MainActivity extends Activity {
 
     private void goToAuto() {
         Timber.d("Going to autonomous mode...");
-        mRotorCtlService.setState(RotorCtlService.StateChangeRequest.TO_AUTONOMOUS);
+        mRotorCtlService.setState(RotorCtlService.State.AUTONOMOUS);
         updateAutoBtnStyle();
     }
 
     private void goToHomed() {
         Timber.d("Homing...");
-        mRotorCtlService.setState(RotorCtlService.StateChangeRequest.TO_HOMED);
+        mRotorCtlService.setState(RotorCtlService.State.HOMED);
         updateAutoBtnStyle();
     }
 
     private void goToManual() {
         Timber.d("Going to manual mode...");
-        mRotorCtlService.setState(RotorCtlService.StateChangeRequest.TO_MANUAL);
+        mRotorCtlService.setState(RotorCtlService.State.MANUAL);
         updateAutoBtnStyle();
     }
 

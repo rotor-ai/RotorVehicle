@@ -20,12 +20,6 @@ public class RotorCtlService extends Thread {
         AUTONOMOUS
     }
 
-    enum StateChangeRequest {
-        TO_HOMED,
-        TO_MANUAL,
-        TO_AUTONOMOUS
-    }
-
     public RotorCtlService(Context context) {
         mContext = context;
         mRotorState = State.HOMED;
@@ -41,37 +35,37 @@ public class RotorCtlService extends Thread {
     }
 
 
-    public void setState(StateChangeRequest stateChangeRequest) throws IllegalArgumentException {
+    public void setState(State stateChangeRequest) throws IllegalArgumentException {
         switch(mRotorState) {
             case HOMED:
                 switch (stateChangeRequest) {
-                    case TO_HOMED:
+                    case HOMED:
                         return;
-                    case TO_AUTONOMOUS:
+                    case AUTONOMOUS:
                         mRotorState = State.AUTONOMOUS;
                         return;
-                    case TO_MANUAL:
+                    case MANUAL:
                         mRotorState = State.MANUAL;
                         return;
                 }
             case MANUAL:
                 switch (stateChangeRequest) {
-                    case TO_HOMED:
+                    case HOMED:
                         mRotorState = State.HOMED;
                         return;
-                    case TO_AUTONOMOUS:
+                    case AUTONOMOUS:
                         throw new IllegalArgumentException("Cannot move directly to autonomous mode from manual");
-                    case TO_MANUAL:
+                    case MANUAL:
                         return;
                 }
             case AUTONOMOUS:
                 switch (stateChangeRequest) {
-                    case TO_HOMED:
+                    case HOMED:
                         mRotorState = State.HOMED;
                         return;
-                    case TO_AUTONOMOUS:
+                    case AUTONOMOUS:
                         return;
-                    case TO_MANUAL:
+                    case MANUAL:
                         throw new IllegalArgumentException("Cannot move directly to manual mode from autonomous");
                 }
 

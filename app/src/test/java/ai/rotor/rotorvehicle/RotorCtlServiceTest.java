@@ -22,7 +22,7 @@ public class RotorCtlServiceTest {
         RotorCtlService.State initialState = rotorCtlService.getRotorState();
         assertEquals(initialState, RotorCtlService.State.HOMED);
 
-        rotorCtlService.setState(RotorCtlService.StateChangeRequest.TO_MANUAL);
+        rotorCtlService.setState(RotorCtlService.State.MANUAL);
         assertEquals(rotorCtlService.getRotorState(), RotorCtlService.State.MANUAL);
     }
 
@@ -31,22 +31,22 @@ public class RotorCtlServiceTest {
         RotorCtlService rotorCtlService = new RotorCtlService(null);
         assertEquals(rotorCtlService.getRotorState(), RotorCtlService.State.HOMED);
 
-        rotorCtlService.setState(RotorCtlService.StateChangeRequest.TO_AUTONOMOUS);
+        rotorCtlService.setState(RotorCtlService.State.AUTONOMOUS);
         assertEquals(rotorCtlService.getRotorState(), RotorCtlService.State.AUTONOMOUS);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void transManToAuto() {
         RotorCtlService rotorCtlService = new RotorCtlService(null);
-        rotorCtlService.setState(RotorCtlService.StateChangeRequest.TO_MANUAL);
-        rotorCtlService.setState(RotorCtlService.StateChangeRequest.TO_AUTONOMOUS);
+        rotorCtlService.setState(RotorCtlService.State.MANUAL);
+        rotorCtlService.setState(RotorCtlService.State.AUTONOMOUS);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void transAutoToMan() {
         RotorCtlService rotorCtlService = new RotorCtlService(null);
-        rotorCtlService.setState(RotorCtlService.StateChangeRequest.TO_AUTONOMOUS);
-        rotorCtlService.setState(RotorCtlService.StateChangeRequest.TO_MANUAL);
+        rotorCtlService.setState(RotorCtlService.State.AUTONOMOUS);
+        rotorCtlService.setState(RotorCtlService.State.MANUAL);
     }
 
     @Test
