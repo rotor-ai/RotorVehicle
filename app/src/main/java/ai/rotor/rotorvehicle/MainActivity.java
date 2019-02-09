@@ -3,26 +3,30 @@ package ai.rotor.rotorvehicle;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Color;
 import android.os.Bundle;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
-import butterknife.BindView;
-import butterknife.ButterKnife;
-import timber.log.Timber;
-
 import android.view.View;
 import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Set;
+
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import timber.log.Timber;
+
+import static ai.rotor.rotorvehicle.RotorCtlService.State.AUTONOMOUS;
+import static ai.rotor.rotorvehicle.RotorCtlService.State.HOMED;
+import static ai.rotor.rotorvehicle.RotorCtlService.State.MANUAL;
 
 public class MainActivity extends Activity {
     private static final int MY_PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION = 1;
@@ -30,7 +34,7 @@ public class MainActivity extends Activity {
     private static final int REQUEST_PAIR_BT = 3;
     private static final int DISCOVERABLE_DURATION = 30;
 
-    private BluetoothAdapter mBluetoothAdapter;
+    private BluetoothManager mBluetoothManager;
     private BluetoothDevice mPairedBTDevice;
     private Set<BluetoothDevice> mPairedDevices;
     private BluetoothService mBluetoothService;
@@ -39,12 +43,18 @@ public class MainActivity extends Activity {
     private final BroadcastReceiver mReceiver = new RotorBroadcastReceiver();
     private RotorCtlService mRotorCtlService;
 
-    @BindView(R.id.pairBtn) Button mPairBtn;
-    @BindView(R.id.statusTv) TextView mStatusTv;
-    @BindView(R.id.commandTv) TextView mCommandTv;
-    @BindView(R.id.pairingProgressBar) ProgressBar mPairingProgressBar;
-    @BindView(R.id.autoBtn) Button mAutoBtn;
-    @BindView(R.id.autoStatusTv) TextView mAutoStatusTv;
+    @BindView(R.id.pairBtn)
+    Button mPairBtn;
+    @BindView(R.id.statusTv)
+    TextView mStatusTv;
+    @BindView(R.id.commandTv)
+    TextView mCommandTv;
+    @BindView(R.id.pairingProgressBar)
+    ProgressBar mPairingProgressBar;
+    @BindView(R.id.autoBtn)
+    Button mAutoBtn;
+    @BindView(R.id.autoStatusTv)
+    TextView mAutoStatusTv;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,10 +67,11 @@ public class MainActivity extends Activity {
 
         // Setup GUI
         mPairingProgressBar.setVisibility(View.INVISIBLE);
-        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        mBluetoothAdapter.setName("Vehicle");
 
-        mPairedDevices = mBluetoothAdapter.getBondedDevices();
+        mBluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
+        mBluetoothManager.getAdapter().setName("Vehicle");
+        mPairedDevices = mBluetoothManager.getAdapter().getBondedDevices();
+
         if (mPairedDevices == null || mPairedDevices.size() == 0) {
             showDisabled();
         } else if (mPairedDevices.size() == 1) {
@@ -80,34 +91,17 @@ public class MainActivity extends Activity {
         mPairBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mPairedDevices = mBluetoothAdapter.getBondedDevices();
-                Timber.d("Pair button pressed");
-                if (mPairedDevices.size() > 0) {
-                    Timber.d("Still paired to devices: " + mPairedDevices);
-                    for (BluetoothDevice device : mPairedDevices) {
-                        unpairDevice(device);
-                    }
-                    showDisabled();
-                } else {
-                    if (!mBluetoothAdapter.isEnabled()) {
-                        Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                        startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
-                        Timber.d("Starting enabling activity");
-                    } else {
-                        makeDiscoverable();
-                    }
-
-                }
+                onClickPairButton();
             }
         });
 
         mAutoBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (mRotorCtlService.getRotorState() == RotorCtlService.State.HOMED) {
-                    goToAuto();
+                if (mRotorCtlService.getRotorState() == HOMED) {
+                    goToMode(AUTONOMOUS);
                 } else {
-                    goToHomed();
+                    goToMode(HOMED);
                 }
             }
         });
@@ -121,8 +115,7 @@ public class MainActivity extends Activity {
 
         registerReceiver(mReceiver, filter);
         LocalBroadcastManager.getInstance(this).registerReceiver(mReceiver, filter);
-
-        }
+    }
 
     @Override
     protected void onDestroy() {
@@ -154,6 +147,27 @@ public class MainActivity extends Activity {
         }
     }
 
+    private void onClickPairButton() {
+        mPairedDevices = mBluetoothManager.getAdapter().getBondedDevices();
+        Timber.d("Pair button pressed");
+        if (mPairedDevices.size() > 0) {
+            Timber.d("Still paired to devices: " + mPairedDevices);
+            for (BluetoothDevice device : mPairedDevices) {
+                unpairDevice(device);
+            }
+            showDisabled();
+        } else {
+            if (!mBluetoothManager.getAdapter().isEnabled()) {
+                Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+                Timber.d("Starting enabling activity");
+            } else {
+                makeDiscoverable();
+            }
+
+        }
+    }
+
     private void makeDiscoverable() {
         Timber.d("Making discoverable...");
         Intent discoverableIntent =
@@ -161,6 +175,7 @@ public class MainActivity extends Activity {
         discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, DISCOVERABLE_DURATION);
         startActivityForResult(discoverableIntent, REQUEST_PAIR_BT);
     }
+
 
     private void showPairing() {
         Timber.d("Show Pairing");
@@ -173,7 +188,7 @@ public class MainActivity extends Activity {
 
     private void showEnabled() {
         String name = mPairedBTDevice.getName();
-        mStatusTv.setText("Bluetooth state: Paired to " + name + ", waiting for connection...");
+        mStatusTv.setText(String.format("Bluetooth state: Paired to %s, waiting for connection...", name));
         mStatusTv.setTextColor(Color.BLUE);
         mPairingProgressBar.setVisibility(View.INVISIBLE);
 
@@ -202,7 +217,7 @@ public class MainActivity extends Activity {
 
     private void showConnected() {
         String name = mPairedBTDevice.getName();
-        mStatusTv.setText("Bluetooth state: Connected to " + name);
+        mStatusTv.setText(String.format("Bluetooth state: Connected to %s", name));
         mStatusTv.setTextColor(Color.BLUE);
         mPairingProgressBar.setVisibility(View.INVISIBLE);
 
@@ -213,28 +228,8 @@ public class MainActivity extends Activity {
     }
 
     private void updateAutoBtnStyle() {
-        if (mRotorCtlService.getRotorState() == RotorCtlService.State.HOMED) {
-            showHomed();
-        } else if (mRotorCtlService.getRotorState() == RotorCtlService.State.MANUAL) {
-            showManual();
-        } else {
-            showAuto();
-        }
-    }
-
-    private void showHomed() {
-        mAutoStatusTv.setText("Rotor State: " + mRotorCtlService.getRotorState());
-        mAutoBtn.setText("AUTO MODE!");
-    }
-
-    private void showAuto() {
-        mAutoStatusTv.setText("Rotor State: " + mRotorCtlService.getRotorState());
-        mAutoBtn.setText("HOME ROTOR");
-    }
-
-    private void showManual() {
-        mAutoStatusTv.setText("Rotor State: " + mRotorCtlService.getRotorState());
-        mAutoBtn.setText("HOME ROTOR");
+        mAutoStatusTv.setText(String.format("Rotor State: %s", mRotorCtlService.getRotorState()));
+        mAutoBtn.setText(mRotorCtlService.getRotorState().name());
     }
 
     private void hideProgress() {
@@ -250,31 +245,18 @@ public class MainActivity extends Activity {
         }
     }
 
-    private void goToAuto() {
-        Timber.d("Going to autonomous mode...");
-        mRotorCtlService.setState(RotorCtlService.State.AUTONOMOUS);
+    private void goToMode(RotorCtlService.State newState){
+        Timber.d("Changing to: " + newState.name());
+        mRotorCtlService.setState(newState);
         updateAutoBtnStyle();
     }
-
-    private void goToHomed() {
-        Timber.d("Homing...");
-        mRotorCtlService.setState(RotorCtlService.State.HOMED);
-        updateAutoBtnStyle();
-    }
-
-    private void goToManual() {
-        Timber.d("Going to manual mode...");
-        mRotorCtlService.setState(RotorCtlService.State.MANUAL);
-        updateAutoBtnStyle();
-    }
-
 
     class RotorBroadcastReceiver extends BroadcastReceiver {
 
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
-            Timber.d("In onReceive, action: " + action);
+            Timber.d(String.format("In onReceive, action: %s", action));
             if (BluetoothAdapter.ACTION_SCAN_MODE_CHANGED.equals(action)) {
                 int scanMode = intent.getIntExtra(BluetoothAdapter.EXTRA_SCAN_MODE, BluetoothAdapter.ERROR);
                 Timber.d("Scan mode value: %s", String.valueOf(scanMode));
@@ -282,11 +264,11 @@ public class MainActivity extends Activity {
                 switch (scanMode) {
                     case BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE:
                         showPairing();
-                        goToHomed();
+                        goToMode(HOMED);
                         break;
                     case BluetoothAdapter.SCAN_MODE_CONNECTABLE:
                         hideProgress();
-                        mPairedDevices = mBluetoothAdapter.getBondedDevices();
+                        mPairedDevices = mBluetoothManager.getAdapter().getBondedDevices();
                         if (mPairedDevices == null || mPairedDevices.size() == 0) {
                             showDisabled();
                         } else if (mPairedDevices.size() == 1 && !connected) {
@@ -313,7 +295,7 @@ public class MainActivity extends Activity {
                 }
                 if (mDevice.getBondState() == BluetoothDevice.BOND_NONE) {
                     Timber.d("BroadcastReceiver: BOND_NONE.");
-                    mPairedDevices = mBluetoothAdapter.getBondedDevices();
+                    mPairedDevices = mBluetoothManager.getAdapter().getBondedDevices();
                     if (mPairedDevices == null || mPairedDevices.size() == 0) {
                         showDisabled();
                     } else if (mPairedDevices.size() == 1) {
@@ -326,13 +308,13 @@ public class MainActivity extends Activity {
             if (RotorUtils.ACTION_STREAMS_ACQUIRED.equals(action)) {
                 connected = true;
                 showConnected();
-                goToManual();
+                goToMode(MANUAL);
             }
 
             if (RotorUtils.ACTION_DISCONNECTED.equals(action)) {
                 connected = false;
                 showEnabled();
-                goToHomed();
+                goToMode(HOMED);
             }
 
             if (RotorUtils.ACTION_MESSAGE_RECEIVED.equals(action)) {
@@ -340,11 +322,11 @@ public class MainActivity extends Activity {
 
                 if (cmd.charAt(0) == '_') {
                     if (cmd.charAt(1) == 'A') {
-                        goToHomed();
-                        goToAuto();
+                        goToMode(HOMED);
+                        goToMode(AUTONOMOUS);
                     } else {
-                        goToHomed();
-                        goToManual();
+                        goToMode(HOMED);
+                        goToMode(MANUAL);
                     }
                     return;
                 }

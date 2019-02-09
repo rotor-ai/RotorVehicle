@@ -10,6 +10,4 @@ public class RotorUtils {
     static final String ACTION_DISCONNECTED = "disconnected";
     static final String ACTION_MESSAGE_RECEIVED = "messageReceived";
     static final String EXTRA_CMD = "cmd";
-
-
 }
