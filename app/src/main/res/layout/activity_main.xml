@@ -12,22 +12,21 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:text="Button"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/statusTv" />
+        app:layout_constraintTop_toBottomOf="@+id/statusTv"
+        tools:text="pairBtn" />
 
     <TextView
         android:id="@+id/statusTv"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:text="TextView"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="status tv" />
 
     <TextView
         android:id="@+id/commandTv"
@@ -35,10 +34,10 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:gravity="center"
-        android:text="TextView"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/autoBtn" />
+        app:layout_constraintTop_toBottomOf="@+id/autoBtn"
+        tools:text="command tv" />
 
     <ProgressBar
         android:id="@+id/pairingProgressBar"
@@ -55,20 +54,20 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:text="AUTO MODE"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/autoStatusTv" />
+        app:layout_constraintTop_toBottomOf="@+id/autoStatusTv"
+        tools:text="AUTO MODE" />
 
     <TextView
         android:id="@+id/autoStatusTv"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:text="TextView"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/pairingProgressBar" />
+        app:layout_constraintTop_toBottomOf="@+id/pairingProgressBar"
+        tools:text="auto status tv" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

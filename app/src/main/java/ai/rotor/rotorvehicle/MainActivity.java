@@ -29,7 +29,6 @@ import static ai.rotor.rotorvehicle.RotorCtlService.State.HOMED;
 import static ai.rotor.rotorvehicle.RotorCtlService.State.MANUAL;
 
 public class MainActivity extends Activity {
-    private static final int MY_PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION = 1;
     private static final int REQUEST_ENABLE_BT = 2;
     private static final int REQUEST_PAIR_BT = 3;
     private static final int DISCOVERABLE_DURATION = 30;
@@ -38,7 +37,7 @@ public class MainActivity extends Activity {
     private BluetoothDevice mPairedBTDevice;
     private Set<BluetoothDevice> mPairedDevices;
     private BluetoothService mBluetoothService;
-    private Boolean connected;
+    private Boolean connected = false;
     private Timber.DebugTree debugTree = new Timber.DebugTree();
     private final BroadcastReceiver mReceiver = new RotorBroadcastReceiver();
     private RotorCtlService mRotorCtlService;
@@ -74,14 +73,10 @@ public class MainActivity extends Activity {
 
         if (mPairedDevices == null || mPairedDevices.size() == 0) {
             showDisabled();
-        } else if (mPairedDevices.size() == 1) {
+        } else {
             mPairedBTDevice = mPairedDevices.iterator().next();
             showEnabled();
-        } else {
-            showMultipleDevices();
         }
-
-        connected = false;
 
         // Start the Rotor control service thread
         mRotorCtlService = new RotorCtlService(this);
@@ -140,7 +135,7 @@ public class MainActivity extends Activity {
             if (resultCode == Activity.RESULT_CANCELED) {
                 Timber.d("OnActivityResult, discovery cancelled");
                 showDisabled();
-                hideProgress();
+                mPairingProgressBar.setVisibility(View.INVISIBLE);
             } else if (resultCode == Activity.RESULT_OK) {
                 showPairing();
             }
@@ -164,7 +159,6 @@ public class MainActivity extends Activity {
             } else {
                 makeDiscoverable();
             }
-
         }
     }
 
@@ -207,14 +201,6 @@ public class MainActivity extends Activity {
         mCommandTv.setVisibility(View.INVISIBLE);
     }
 
-    private void showMultipleDevices() {
-        mStatusTv.setText(getString(R.string.ui_too_many));
-        mStatusTv.setTextColor(Color.RED);
-
-        mPairBtn.setText(getString(R.string.ui_unpair));
-        mCommandTv.setVisibility(View.INVISIBLE);
-    }
-
     private void showConnected() {
         String name = mPairedBTDevice.getName();
         mStatusTv.setText(String.format("Bluetooth state: Connected to %s", name));
@@ -230,10 +216,6 @@ public class MainActivity extends Activity {
     private void updateAutoBtnStyle() {
         mAutoStatusTv.setText(String.format("Rotor State: %s", mRotorCtlService.getRotorState()));
         mAutoBtn.setText(mRotorCtlService.getRotorState().name());
-    }
-
-    private void hideProgress() {
-        mPairingProgressBar.setVisibility(View.INVISIBLE);
     }
 
     private void unpairDevice(BluetoothDevice device) {
@@ -267,7 +249,7 @@ public class MainActivity extends Activity {
                         goToMode(HOMED);
                         break;
                     case BluetoothAdapter.SCAN_MODE_CONNECTABLE:
-                        hideProgress();
+                        mPairingProgressBar.setVisibility(View.INVISIBLE);
                         mPairedDevices = mBluetoothManager.getAdapter().getBondedDevices();
                         if (mPairedDevices == null || mPairedDevices.size() == 0) {
                             showDisabled();
@@ -286,7 +268,7 @@ public class MainActivity extends Activity {
                     Timber.d("BroadcastReceiver: BOND_BONDED.");
                     mPairedBTDevice = mDevice;
                     showEnabled();
-                    hideProgress();
+                    mPairingProgressBar.setVisibility(View.INVISIBLE);
                     mBluetoothService = new BluetoothService();
                     mBluetoothService.startClient(MainActivity.this);
                 }
