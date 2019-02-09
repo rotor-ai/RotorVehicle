@@ -32,4 +32,5 @@ dependencies {
     implementation 'com.jakewharton.timber:timber:4.7.0'
     implementation 'org.jetbrains:annotations-java5:15.0'
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
+    testImplementation 'org.mockito:mockito-core:2.7.22'
 }

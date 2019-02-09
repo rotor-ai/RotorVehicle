@@ -120,7 +120,7 @@ public class BluetoothService {
             mOutStream = tmpOut;
             Log.d(TAG, "Input and output streams acquired!");
 
-            Intent streamsAcquiredIntent = new Intent("streamsAcquired");
+            Intent streamsAcquiredIntent = new Intent(RotorUtils.ACTION_STREAMS_ACQUIRED);
             LocalBroadcastManager.getInstance(mContext).sendBroadcast(streamsAcquiredIntent);
         }
 
@@ -133,12 +133,12 @@ public class BluetoothService {
                     bytes = mInStream.read(mBuffer);
                     String incomingMessage = new String(mBuffer, 0, bytes);
                     Log.d(TAG, "Input stream: " + incomingMessage);
-                    Intent messageReceivedIntent = new Intent("messageReceived");
-                    messageReceivedIntent.putExtra("cmd", incomingMessage);
+                    Intent messageReceivedIntent = new Intent(RotorUtils.ACTION_MESSAGE_RECEIVED);
+                    messageReceivedIntent.putExtra(RotorUtils.EXTRA_CMD, incomingMessage);
                     LocalBroadcastManager.getInstance(mContext).sendBroadcast(messageReceivedIntent);
                 } catch (IOException e) {
                     Log.d(TAG, "Input stream was disconnected", e);
-                    Intent disconnectedIntent = new Intent("disconnected");
+                    Intent disconnectedIntent = new Intent(RotorUtils.ACTION_DISCONNECTED);
                     LocalBroadcastManager.getInstance(mContext).sendBroadcast(disconnectedIntent);
                     break;
                 }
