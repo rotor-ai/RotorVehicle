@@ -4,7 +4,7 @@ import android.content.Context;
 
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 public class RotorCtlServiceTest {
     private Context testCtx;

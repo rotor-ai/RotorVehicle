@@ -1,12 +1,6 @@
 package ai.rotor.rotorvehicle;
 
-import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
-
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
-import timber.log.Timber;
 
 public class RotorCtlService extends Thread {
     private final static String TAG = "RotorCTLService";
@@ -46,7 +40,7 @@ public class RotorCtlService extends Thread {
             throw new IllegalArgumentException("Cannot move directly to manual mode from autonomous");
         }
 
-        if (mRotorState != stateChangeRequest){
+        if (mRotorState != stateChangeRequest) {
             mRotorState = stateChangeRequest;
         }
     }

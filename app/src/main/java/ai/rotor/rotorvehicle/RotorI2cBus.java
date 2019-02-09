@@ -1,7 +1,5 @@
 package ai.rotor.rotorvehicle;
 
-import android.util.Log;
-
 import com.google.android.things.pio.I2cDevice;
 import com.google.android.things.pio.PeripheralManager;
 

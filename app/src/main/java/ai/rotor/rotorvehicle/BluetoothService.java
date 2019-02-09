@@ -11,16 +11,14 @@ import android.util.Log;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.charset.Charset;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager; //https://github.com/flutter/flutter-intellij/issues/966
 
-
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import static ai.rotor.rotorvehicle.RotorUtils.ROTOR_UUID;
 
 @SuppressLint("LogNotTimber")
 public class BluetoothService {
-    private static String TAG =  "Debug, BluetoothService";
+    private static String TAG = "Debug, BluetoothService";
     private AcceptThread mAcceptThread;
     private ManageConnectedThread mManageConnectedThread;
     private BluetoothSocket mSocket;
@@ -58,7 +56,7 @@ public class BluetoothService {
             Log.d(TAG, "AcceptThread running, thread ID: " + Thread.currentThread().getId());
             mSocket = null;
 
-            while(true) {
+            while (true) {
                 try {
                     mSocket = mServerSocket.accept();
                 } catch (IOException e) {
@@ -142,24 +140,6 @@ public class BluetoothService {
                     LocalBroadcastManager.getInstance(mContext).sendBroadcast(disconnectedIntent);
                     break;
                 }
-            }
-        }
-
-        public void write(byte[] bytes) {
-            String text = new String(bytes, Charset.defaultCharset());
-            Log.d(TAG, "Output stream: " + text);
-            try {
-                mOutStream.write(bytes);
-            } catch (IOException e) {
-                Log.e(TAG, "Error occurred when sending data", e);
-            }
-        }
-
-        public void cancel() {
-            try {
-                mSocket.close();
-            } catch (IOException e) {
-                Log.e(TAG, "Could not close the connect socket", e);
             }
         }
     }
