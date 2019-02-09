@@ -103,24 +103,7 @@ public class MainActivity extends Activity {
         mPairBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mPairedDevices = mBluetoothManager.getAdapter().getBondedDevices();
-                Timber.d("Pair button pressed");
-                if (mPairedDevices.size() > 0) {
-                    Timber.d("Still paired to devices: " + mPairedDevices);
-                    for (BluetoothDevice device : mPairedDevices) {
-                        unpairDevice(device);
-                    }
-                    showDisabled();
-                } else {
-                    if (!mBluetoothManager.getAdapter().isEnabled()) {
-                        Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                        startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
-                        Timber.d("Starting enabling activity");
-                    } else {
-                        makeDiscoverable();
-                    }
-
-                }
+                onClickPairButton();
             }
         });
 
@@ -173,6 +156,27 @@ public class MainActivity extends Activity {
                 Timber.d("OnActivityResult, enabled");
                 makeDiscoverable();
             }
+        }
+    }
+
+    private void onClickPairButton() {
+        mPairedDevices = mBluetoothManager.getAdapter().getBondedDevices();
+        Timber.d("Pair button pressed");
+        if (mPairedDevices.size() > 0) {
+            Timber.d("Still paired to devices: " + mPairedDevices);
+            for (BluetoothDevice device : mPairedDevices) {
+                unpairDevice(device);
+            }
+            showDisabled();
+        } else {
+            if (!mBluetoothManager.getAdapter().isEnabled()) {
+                Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+                Timber.d("Starting enabling activity");
+            } else {
+                makeDiscoverable();
+            }
+
         }
     }
 
@@ -268,26 +272,6 @@ public class MainActivity extends Activity {
     }
 
     private void updateAutoBtnStyle() {
-        if (mRotorCtlService.getRotorState() == HOMED) {
-            showHomed();
-        } else if (mRotorCtlService.getRotorState() == MANUAL) {
-            showManual();
-        } else {
-            showAuto();
-        }
-    }
-
-    private void showHomed() {
-        mAutoStatusTv.setText(String.format("Rotor State: %s", mRotorCtlService.getRotorState()));
-        mAutoBtn.setText(mRotorCtlService.getRotorState().name());
-    }
-
-    private void showAuto() {
-        mAutoStatusTv.setText(String.format("Rotor State: %s", mRotorCtlService.getRotorState()));
-        mAutoBtn.setText(mRotorCtlService.getRotorState().name());
-    }
-
-    private void showManual() {
         mAutoStatusTv.setText(String.format("Rotor State: %s", mRotorCtlService.getRotorState()));
         mAutoBtn.setText(mRotorCtlService.getRotorState().name());
     }
