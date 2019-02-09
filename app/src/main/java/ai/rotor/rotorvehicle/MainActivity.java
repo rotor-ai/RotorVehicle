@@ -15,33 +15,27 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Bundle;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
-import butterknife.BindView;
-import butterknife.ButterKnife;
-import timber.log.Timber;
-
 import android.os.ParcelUuid;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Set;
-import java.util.UUID;
+
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import timber.log.Timber;
 
 import static ai.rotor.rotorvehicle.RotorUtils.ROTOR_UUID;
 
 public class MainActivity extends Activity {
-    private static final int MY_PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION = 1;
     private static final int REQUEST_ENABLE_BT = 2;
-    private static final int REQUEST_PAIR_BT = 3;
-    private static final int DISCOVERABLE_DURATION = 30;
 
     private BluetoothManager mBluetoothManager;
     private BluetoothDevice mPairedBTDevice;
@@ -58,12 +52,18 @@ public class MainActivity extends Activity {
     private final BroadcastReceiver mReceiver = new RotorBroadcastReceiver();
     private RotorCtlService mRotorCtlService;
 
-    @BindView(R.id.pairBtn) Button mPairBtn;
-    @BindView(R.id.statusTv) TextView mStatusTv;
-    @BindView(R.id.commandTv) TextView mCommandTv;
-    @BindView(R.id.pairingProgressBar) ProgressBar mPairingProgressBar;
-    @BindView(R.id.autoBtn) Button mAutoBtn;
-    @BindView(R.id.autoStatusTv) TextView mAutoStatusTv;
+    @BindView(R.id.pairBtn)
+    Button mPairBtn;
+    @BindView(R.id.statusTv)
+    TextView mStatusTv;
+    @BindView(R.id.commandTv)
+    TextView mCommandTv;
+    @BindView(R.id.pairingProgressBar)
+    ProgressBar mPairingProgressBar;
+    @BindView(R.id.autoBtn)
+    Button mAutoBtn;
+    @BindView(R.id.autoStatusTv)
+    TextView mAutoStatusTv;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,12 +76,11 @@ public class MainActivity extends Activity {
 
         // Setup GUI
         mPairingProgressBar.setVisibility(View.INVISIBLE);
-        mBluetoothManager.getAdapter().setName("Vehicle");
 
         mBluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
         mBluetoothManager.getAdapter().setName("Vehicle");
-
         mPairedDevices = mBluetoothManager.getAdapter().getBondedDevices();
+
         if (mPairedDevices == null || mPairedDevices.size() == 0) {
             showDisabled();
         } else if (mPairedDevices.size() == 1) {
@@ -150,10 +149,10 @@ public class MainActivity extends Activity {
         unregisterReceiver(mReceiver);
 
         //shutdown Bluetooth advertising and GATT server
-        if (mAdvertiser != null){
+        if (mAdvertiser != null) {
             mAdvertiser.stopAdvertising(mAdvertiserCallback);
         }
-        if (mGattServer != null){
+        if (mGattServer != null) {
             mGattServer.close();
         }
     }
@@ -180,7 +179,7 @@ public class MainActivity extends Activity {
         mAdvertiser = mBluetoothManager.getAdapter().getBluetoothLeAdvertiser();
         GSCallback gsCallback = new GSCallback();
         mGattServer = mBluetoothManager.openGattServer(this, gsCallback);
-        BluetoothGattService rotorService = new BluetoothGattService(ROTOR_UUID,BluetoothGattService.SERVICE_TYPE_PRIMARY);
+        BluetoothGattService rotorService = new BluetoothGattService(ROTOR_UUID, BluetoothGattService.SERVICE_TYPE_PRIMARY);
         mGattServer.addService(rotorService);
         mAdvertiserCallback = new AdvertiseCallback() {
             @Override
