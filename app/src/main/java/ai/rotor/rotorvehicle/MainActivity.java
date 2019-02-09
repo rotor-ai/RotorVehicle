@@ -38,18 +38,15 @@ import static ai.rotor.rotorvehicle.RotorCtlService.State.MANUAL;
 import static ai.rotor.rotorvehicle.RotorUtils.ROTOR_UUID;
 
 public class MainActivity extends Activity {
+    private static final int MY_PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION = 1;
     private static final int REQUEST_ENABLE_BT = 2;
+    private static final int REQUEST_PAIR_BT = 3;
+    private static final int DISCOVERABLE_DURATION = 30;
 
     private BluetoothManager mBluetoothManager;
     private BluetoothDevice mPairedBTDevice;
     private Set<BluetoothDevice> mPairedDevices;
     private BluetoothService mBluetoothService;
-
-    //BLE
-    private BluetoothGattServer mGattServer;
-    private BluetoothLeAdvertiser mAdvertiser;
-    AdvertiseCallback mAdvertiserCallback;
-
     private Boolean connected;
     private Timber.DebugTree debugTree = new Timber.DebugTree();
     private final BroadcastReceiver mReceiver = new RotorBroadcastReceiver();
@@ -133,14 +130,6 @@ public class MainActivity extends Activity {
     protected void onDestroy() {
         super.onDestroy();
         unregisterReceiver(mReceiver);
-
-        //shutdown Bluetooth advertising and GATT server
-        if (mAdvertiser != null) {
-            mAdvertiser.stopAdvertising(mAdvertiserCallback);
-        }
-        if (mGattServer != null) {
-            mGattServer.close();
-        }
     }
 
     @Override
@@ -155,6 +144,14 @@ public class MainActivity extends Activity {
             } else {
                 Timber.d("OnActivityResult, enabled");
                 makeDiscoverable();
+            }
+        } else if (requestCode == REQUEST_PAIR_BT) {
+            if (resultCode == Activity.RESULT_CANCELED) {
+                Timber.d("OnActivityResult, discovery cancelled");
+                showDisabled();
+                hideProgress();
+            } else if (resultCode == Activity.RESULT_OK) {
+                showPairing();
             }
         }
     }
@@ -182,42 +179,10 @@ public class MainActivity extends Activity {
 
     private void makeDiscoverable() {
         Timber.d("Making discoverable...");
-
-        mAdvertiser = mBluetoothManager.getAdapter().getBluetoothLeAdvertiser();
-        GSCallback gsCallback = new GSCallback();
-        mGattServer = mBluetoothManager.openGattServer(this, gsCallback);
-        BluetoothGattService rotorService = new BluetoothGattService(ROTOR_UUID, BluetoothGattService.SERVICE_TYPE_PRIMARY);
-        mGattServer.addService(rotorService);
-        mAdvertiserCallback = new AdvertiseCallback() {
-            @Override
-            public void onStartSuccess(AdvertiseSettings settingsInEffect) {
-                super.onStartSuccess(settingsInEffect);
-                showPairing();
-            }
-
-            @Override
-            public void onStartFailure(int errorCode) {
-                super.onStartFailure(errorCode);
-                showDisabled();
-                hideProgress();
-                Timber.d("Advertise.onStartFailure errorcode: " + errorCode);
-            }
-        };
-
-        AdvertiseSettings settings = new AdvertiseSettings
-                .Builder()
-                .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY)
-                .setConnectable(true)
-                .setTimeout(0)
-                .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_HIGH)
-                .build();
-        AdvertiseData advertiseData = new AdvertiseData
-                .Builder()
-                .setIncludeDeviceName(true)
-                .addServiceUuid(new ParcelUuid(rotorService.getUuid()))
-                .build();
-
-        mAdvertiser.startAdvertising(settings, advertiseData, mAdvertiserCallback);
+        Intent discoverableIntent =
+                new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
+        discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, DISCOVERABLE_DURATION);
+        startActivityForResult(discoverableIntent, REQUEST_PAIR_BT);
     }
 
 
@@ -293,10 +258,6 @@ public class MainActivity extends Activity {
         Timber.d("Changing to: " + newState.name());
         mRotorCtlService.setState(newState);
         updateAutoBtnStyle();
-    }
-
-    class GSCallback extends BluetoothGattServerCallback {
-
     }
 
     class RotorBroadcastReceiver extends BroadcastReceiver {
