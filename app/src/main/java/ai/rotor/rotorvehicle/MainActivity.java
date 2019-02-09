@@ -32,6 +32,9 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import timber.log.Timber;
 
+import static ai.rotor.rotorvehicle.RotorCtlService.State.AUTONOMOUS;
+import static ai.rotor.rotorvehicle.RotorCtlService.State.HOMED;
+import static ai.rotor.rotorvehicle.RotorCtlService.State.MANUAL;
 import static ai.rotor.rotorvehicle.RotorUtils.ROTOR_UUID;
 
 public class MainActivity extends Activity {
@@ -124,10 +127,10 @@ public class MainActivity extends Activity {
         mAutoBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (mRotorCtlService.getRotorState() == RotorCtlService.State.HOMED) {
-                    goToAuto();
+                if (mRotorCtlService.getRotorState() == HOMED) {
+                    goToMode(AUTONOMOUS);
                 } else {
-                    goToHomed();
+                    goToMode(HOMED);
                 }
             }
         });
@@ -225,7 +228,7 @@ public class MainActivity extends Activity {
 
     private void showEnabled() {
         String name = mPairedBTDevice.getName();
-        mStatusTv.setText("Bluetooth state: Paired to " + name + ", waiting for connection...");
+        mStatusTv.setText(String.format("Bluetooth state: Paired to %s, waiting for connection...", name));
         mStatusTv.setTextColor(Color.BLUE);
         mPairingProgressBar.setVisibility(View.INVISIBLE);
 
@@ -254,7 +257,7 @@ public class MainActivity extends Activity {
 
     private void showConnected() {
         String name = mPairedBTDevice.getName();
-        mStatusTv.setText("Bluetooth state: Connected to " + name);
+        mStatusTv.setText(String.format("Bluetooth state: Connected to %s", name));
         mStatusTv.setTextColor(Color.BLUE);
         mPairingProgressBar.setVisibility(View.INVISIBLE);
 
@@ -265,9 +268,9 @@ public class MainActivity extends Activity {
     }
 
     private void updateAutoBtnStyle() {
-        if (mRotorCtlService.getRotorState() == RotorCtlService.State.HOMED) {
+        if (mRotorCtlService.getRotorState() == HOMED) {
             showHomed();
-        } else if (mRotorCtlService.getRotorState() == RotorCtlService.State.MANUAL) {
+        } else if (mRotorCtlService.getRotorState() == MANUAL) {
             showManual();
         } else {
             showAuto();
@@ -275,18 +278,18 @@ public class MainActivity extends Activity {
     }
 
     private void showHomed() {
-        mAutoStatusTv.setText("Rotor State: " + mRotorCtlService.getRotorState());
-        mAutoBtn.setText("AUTO MODE!");
+        mAutoStatusTv.setText(String.format("Rotor State: %s", mRotorCtlService.getRotorState()));
+        mAutoBtn.setText(mRotorCtlService.getRotorState().name());
     }
 
     private void showAuto() {
-        mAutoStatusTv.setText("Rotor State: " + mRotorCtlService.getRotorState());
-        mAutoBtn.setText("HOME ROTOR");
+        mAutoStatusTv.setText(String.format("Rotor State: %s", mRotorCtlService.getRotorState()));
+        mAutoBtn.setText(mRotorCtlService.getRotorState().name());
     }
 
     private void showManual() {
-        mAutoStatusTv.setText("Rotor State: " + mRotorCtlService.getRotorState());
-        mAutoBtn.setText("HOME ROTOR");
+        mAutoStatusTv.setText(String.format("Rotor State: %s", mRotorCtlService.getRotorState()));
+        mAutoBtn.setText(mRotorCtlService.getRotorState().name());
     }
 
     private void hideProgress() {
@@ -302,24 +305,11 @@ public class MainActivity extends Activity {
         }
     }
 
-    private void goToAuto() {
-        Timber.d("Going to autonomous mode...");
-        mRotorCtlService.setState(RotorCtlService.State.AUTONOMOUS);
+    private void goToMode(RotorCtlService.State newState){
+        Timber.d("Changing to: " + newState.name());
+        mRotorCtlService.setState(newState);
         updateAutoBtnStyle();
     }
-
-    private void goToHomed() {
-        Timber.d("Homing...");
-        mRotorCtlService.setState(RotorCtlService.State.HOMED);
-        updateAutoBtnStyle();
-    }
-
-    private void goToManual() {
-        Timber.d("Going to manual mode...");
-        mRotorCtlService.setState(RotorCtlService.State.MANUAL);
-        updateAutoBtnStyle();
-    }
-
 
     class GSCallback extends BluetoothGattServerCallback {
 
@@ -330,7 +320,7 @@ public class MainActivity extends Activity {
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
-            Timber.d("In onReceive, action: " + action);
+            Timber.d(String.format("In onReceive, action: %s", action));
             if (BluetoothAdapter.ACTION_SCAN_MODE_CHANGED.equals(action)) {
                 int scanMode = intent.getIntExtra(BluetoothAdapter.EXTRA_SCAN_MODE, BluetoothAdapter.ERROR);
                 Timber.d("Scan mode value: %s", String.valueOf(scanMode));
@@ -338,7 +328,7 @@ public class MainActivity extends Activity {
                 switch (scanMode) {
                     case BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE:
                         showPairing();
-                        goToHomed();
+                        goToMode(HOMED);
                         break;
                     case BluetoothAdapter.SCAN_MODE_CONNECTABLE:
                         hideProgress();
@@ -382,13 +372,13 @@ public class MainActivity extends Activity {
             if (RotorUtils.ACTION_STREAMS_ACQUIRED.equals(action)) {
                 connected = true;
                 showConnected();
-                goToManual();
+                goToMode(MANUAL);
             }
 
             if (RotorUtils.ACTION_DISCONNECTED.equals(action)) {
                 connected = false;
                 showEnabled();
-                goToHomed();
+                goToMode(HOMED);
             }
 
             if (RotorUtils.ACTION_MESSAGE_RECEIVED.equals(action)) {
@@ -396,11 +386,11 @@ public class MainActivity extends Activity {
 
                 if (cmd.charAt(0) == '_') {
                     if (cmd.charAt(1) == 'A') {
-                        goToHomed();
-                        goToAuto();
+                        goToMode(HOMED);
+                        goToMode(AUTONOMOUS);
                     } else {
-                        goToHomed();
-                        goToManual();
+                        goToMode(HOMED);
+                        goToMode(MANUAL);
                     }
                     return;
                 }
