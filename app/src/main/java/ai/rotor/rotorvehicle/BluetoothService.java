@@ -14,7 +14,7 @@ import java.io.OutputStream;
 
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
-import static ai.rotor.rotorvehicle.RotorUtils.ROTOR_UUID;
+import static ai.rotor.rotorvehicle.RotorUtils.ROTOR_TX_RX_SERVICE_UUID;
 
 @SuppressLint("LogNotTimber")
 public class BluetoothService {
@@ -45,7 +45,7 @@ public class BluetoothService {
             BluetoothServerSocket tmp = null;
             mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
             try {
-                tmp = mBluetoothAdapter.listenUsingRfcommWithServiceRecord(NAME, ROTOR_UUID);
+                tmp = mBluetoothAdapter.listenUsingRfcommWithServiceRecord(NAME, ROTOR_TX_RX_SERVICE_UUID);
             } catch (IOException e) {
                 Log.e(TAG, "Socket's listen() method failed", e);
             }

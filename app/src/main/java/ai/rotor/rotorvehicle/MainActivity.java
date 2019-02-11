@@ -3,13 +3,21 @@ package ai.rotor.rotorvehicle;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGattServer;
+import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
+import android.bluetooth.le.AdvertiseCallback;
+import android.bluetooth.le.AdvertiseData;
+import android.bluetooth.le.AdvertiseSettings;
+import android.bluetooth.le.BluetoothLeAdvertiser;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.ParcelUuid;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ProgressBar;
@@ -19,6 +27,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Set;
 
+import ai.rotor.rotorvehicle.data.RotorGattServerCallback;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -27,6 +36,7 @@ import timber.log.Timber;
 import static ai.rotor.rotorvehicle.RotorCtlService.State.AUTONOMOUS;
 import static ai.rotor.rotorvehicle.RotorCtlService.State.HOMED;
 import static ai.rotor.rotorvehicle.RotorCtlService.State.MANUAL;
+import static ai.rotor.rotorvehicle.RotorUtils.ROTOR_TX_RX_SERVICE_UUID;
 
 public class MainActivity extends Activity {
     private static final int REQUEST_ENABLE_BT = 2;
@@ -41,6 +51,12 @@ public class MainActivity extends Activity {
     private Timber.DebugTree debugTree = new Timber.DebugTree();
     private final BroadcastReceiver mReceiver = new RotorBroadcastReceiver();
     private RotorCtlService mRotorCtlService;
+
+    //BLE
+    private BluetoothLeAdvertiser mAdvertiser;
+    private AdvertiseData mAdData;
+    private AdvertiseSettings mAdSettings;
+    private BluetoothGattServer mGattServer;
 
     @BindView(R.id.pairBtn)
     Button mPairBtn;
@@ -61,15 +77,19 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
         Timber.plant(debugTree);
+        mBluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
+        mBluetoothManager.getAdapter().setName("Vehicle");
+        mPairedDevices = mBluetoothManager.getAdapter().getBondedDevices();
 
         Timber.d("onCreate, thread ID: %s", Thread.currentThread().getId());
+        Timber.d("checking for BLE support...");
+        Timber.d("supports BLE: %s", doesDeviceSupportBLE());
+        Timber.d("checking for MultiAdvertisement support...");
+        Timber.d("supports multi advertisement: %s", doesSupportMultiAdvertisement());
 
         // Setup GUI
         mPairingProgressBar.setVisibility(View.INVISIBLE);
 
-        mBluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
-        mBluetoothManager.getAdapter().setName("Vehicle");
-        mPairedDevices = mBluetoothManager.getAdapter().getBondedDevices();
 
         if (mPairedDevices == null || mPairedDevices.size() == 0) {
             showDisabled();
@@ -110,12 +130,7 @@ public class MainActivity extends Activity {
 
         registerReceiver(mReceiver, filter);
         LocalBroadcastManager.getInstance(this).registerReceiver(mReceiver, filter);
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        unregisterReceiver(mReceiver);
+        setupGATTServer();
     }
 
     @Override
@@ -142,11 +157,51 @@ public class MainActivity extends Activity {
         }
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        unregisterReceiver(mReceiver);
+    }
+
+    private void setupGATTServer() {
+        mAdvertiser = mBluetoothManager.getAdapter().getBluetoothLeAdvertiser();
+        mGattServer = mBluetoothManager.openGattServer(this, new RotorGattServerCallback());
+        mGattServer.addService(new BluetoothGattService(ROTOR_TX_RX_SERVICE_UUID, BluetoothGattService.SERVICE_TYPE_PRIMARY));
+
+        mAdSettings = new AdvertiseSettings.Builder()
+                .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_BALANCED)
+                .setConnectable(true)
+                .setTimeout(60000)//1 minute
+                .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_HIGH)
+                .build();
+
+        mAdData = new AdvertiseData.Builder()
+                .setIncludeDeviceName(true)
+                .addServiceUuid(new ParcelUuid(ROTOR_TX_RX_SERVICE_UUID))
+                .build();
+    }
+
+    private void beginAdvertisement() {
+        mAdvertiser.startAdvertising(mAdSettings, mAdData, new AdvertiseCallback() {
+            @Override
+            public void onStartSuccess(AdvertiseSettings settingsInEffect) {
+                super.onStartSuccess(settingsInEffect);
+                Timber.d("GATT Server successfully started");
+            }
+
+            @Override
+            public void onStartFailure(int errorCode) {
+                super.onStartFailure(errorCode);
+                Timber.d("GATT Server failed to start");
+            }
+        });
+    }
+
     private void onClickPairButton() {
         mPairedDevices = mBluetoothManager.getAdapter().getBondedDevices();
         Timber.d("Pair button pressed");
         if (mPairedDevices.size() > 0) {
-            Timber.d("Still paired to devices: " + mPairedDevices);
+            Timber.d("Still paired to devices: %s", mPairedDevices);
             for (BluetoothDevice device : mPairedDevices) {
                 unpairDevice(device);
             }
@@ -164,12 +219,7 @@ public class MainActivity extends Activity {
 
     private void makeDiscoverable() {
         Timber.d("Making discoverable...");
-        Intent discoverableIntent =
-                new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
-        discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, DISCOVERABLE_DURATION);
-        startActivityForResult(discoverableIntent, REQUEST_PAIR_BT);
     }
-
 
     private void showPairing() {
         Timber.d("Show Pairing");
@@ -227,10 +277,18 @@ public class MainActivity extends Activity {
         }
     }
 
-    private void goToMode(RotorCtlService.State newState){
-        Timber.d("Changing to: " + newState.name());
+    private void goToMode(RotorCtlService.State newState) {
+        Timber.d("Changing to: %s", newState.name());
         mRotorCtlService.setState(newState);
         updateAutoBtnStyle();
+    }
+
+    private boolean doesDeviceSupportBLE() {
+        return getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE);
+    }
+
+    private boolean doesSupportMultiAdvertisement() {
+        return mBluetoothManager.getAdapter().isMultipleAdvertisementSupported();
     }
 
     class RotorBroadcastReceiver extends BroadcastReceiver {
@@ -238,7 +296,7 @@ public class MainActivity extends Activity {
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
-            Timber.d(String.format("In onReceive, action: %s", action));
+            Timber.d("In onReceive, action: %s", action);
             if (BluetoothAdapter.ACTION_SCAN_MODE_CHANGED.equals(action)) {
                 int scanMode = intent.getIntExtra(BluetoothAdapter.EXTRA_SCAN_MODE, BluetoothAdapter.ERROR);
                 Timber.d("Scan mode value: %s", String.valueOf(scanMode));
