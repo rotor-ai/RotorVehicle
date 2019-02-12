@@ -31,7 +31,6 @@ import ai.rotor.rotorvehicle.data.RotorGattServerCallback;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import butterknife.OnClick;
 import timber.log.Timber;
 
 import static ai.rotor.rotorvehicle.RotorCtlService.State.AUTONOMOUS;
@@ -58,6 +57,7 @@ public class MainActivity extends Activity {
     private AdvertiseData mAdData;
     private AdvertiseSettings mAdSettings;
     private BluetoothGattServer mGattServer;
+    private AdvertiseCallback advertiseCallback;
 
     @BindView(R.id.statusTv)
     TextView mStatusTv;
@@ -95,6 +95,19 @@ public class MainActivity extends Activity {
             showEnabled();
         }
 
+        mAutoBtn.setOnClickListener(
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        if (mRotorCtlService.getRotorState() == HOMED) {
+                            goToMode(AUTONOMOUS);
+                        } else {
+                            goToMode(HOMED);
+                        }
+                    }
+                }
+        );
+
         // Start the Rotor control service thread
         mRotorCtlService = new RotorCtlService(this);
         mRotorCtlService.run();
@@ -109,6 +122,7 @@ public class MainActivity extends Activity {
 
         registerReceiver(mReceiver, filter);
         LocalBroadcastManager.getInstance(this).registerReceiver(mReceiver, filter);
+
         setupGATTServer();
         beginAdvertisement();
     }
@@ -141,15 +155,10 @@ public class MainActivity extends Activity {
     protected void onDestroy() {
         super.onDestroy();
         unregisterReceiver(mReceiver);
-    }
 
-    @OnClick(R.id.autoBtn)
-    private void onCLickAutoBtn() {
-        if (mRotorCtlService.getRotorState() == HOMED) {
-            goToMode(AUTONOMOUS);
-        } else {
-            goToMode(HOMED);
-        }
+        //Stop advertising
+        mGattServer.close();
+        mAdvertiser.stopAdvertising(advertiseCallback);
     }
 
     private void setupGATTServer() {
@@ -168,10 +177,8 @@ public class MainActivity extends Activity {
                 .setIncludeDeviceName(true)
                 .addServiceUuid(new ParcelUuid(ROTOR_TX_RX_SERVICE_UUID))
                 .build();
-    }
 
-    private void beginAdvertisement() {
-        mAdvertiser.startAdvertising(mAdSettings, mAdData, new AdvertiseCallback() {
+        advertiseCallback = new AdvertiseCallback() {
             @Override
             public void onStartSuccess(AdvertiseSettings settingsInEffect) {
                 super.onStartSuccess(settingsInEffect);
@@ -184,7 +191,11 @@ public class MainActivity extends Activity {
                 super.onStartFailure(errorCode);
                 Timber.d("GATT Server failed to start");
             }
-        });
+        };
+    }
+
+    private void beginAdvertisement() {
+        mAdvertiser.startAdvertising(mAdSettings, mAdData, advertiseCallback);
     }
 
     private void showPairing() {
