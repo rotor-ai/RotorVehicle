@@ -7,16 +7,6 @@
     tools:context=".MainActivity"
     tools:layout_editor_absoluteY="81dp">
 
-    <Button
-        android:id="@+id/pairBtn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/statusTv"
-        tools:text="pairBtn" />
-
     <TextView
         android:id="@+id/statusTv"
         android:layout_width="wrap_content"
@@ -47,7 +37,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/pairBtn" />
+        app:layout_constraintTop_toBottomOf="@id/statusTv" />
 
     <Button
         android:id="@+id/autoBtn"
