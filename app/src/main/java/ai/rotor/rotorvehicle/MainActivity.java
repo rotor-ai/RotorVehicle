@@ -3,7 +3,10 @@ package ai.rotor.rotorvehicle;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGatt;
+import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattServer;
+import android.bluetooth.BluetoothGattServerCallback;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.le.AdvertiseCallback;
@@ -18,6 +21,7 @@ import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.ParcelUuid;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ProgressBar;
@@ -25,9 +29,10 @@ import android.widget.TextView;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
-import ai.rotor.rotorvehicle.data.RotorGattServerCallback;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -45,6 +50,7 @@ public class MainActivity extends Activity {
 
     private BluetoothManager mBluetoothManager;
     private BluetoothDevice mPairedBTDevice;
+    private RotorGattServerCallback mGattServerCallback;
     private Set<BluetoothDevice> mPairedDevices;
     private BluetoothService mBluetoothService;
     private Boolean connected = false;
@@ -163,13 +169,14 @@ public class MainActivity extends Activity {
 
     private void setupGATTServer() {
         mAdvertiser = mBluetoothManager.getAdapter().getBluetoothLeAdvertiser();
-        mGattServer = mBluetoothManager.openGattServer(this, new RotorGattServerCallback());
+        mGattServerCallback = new RotorGattServerCallback();
+        mGattServer = mBluetoothManager.openGattServer(this, mGattServerCallback);
         mGattServer.addService(new BluetoothGattService(ROTOR_TX_RX_SERVICE_UUID, BluetoothGattService.SERVICE_TYPE_PRIMARY));
 
         mAdSettings = new AdvertiseSettings.Builder()
                 .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_BALANCED)
                 .setConnectable(true)
-                .setTimeout(60000)//1 minute
+                .setTimeout(180000)//1 minute
                 .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_HIGH)
                 .build();
 
@@ -195,10 +202,11 @@ public class MainActivity extends Activity {
     }
 
     private void beginAdvertisement() {
+        Timber.d("Beginning advertisement");
         mAdvertiser.startAdvertising(mAdSettings, mAdData, advertiseCallback);
     }
 
-    private void showPairing() {
+     private void showPairing() {
         Timber.d("Show Pairing");
         mStatusTv.setText(getString(R.string.ui_starting_discoverability));
         mStatusTv.setTextColor(Color.GRAY);
@@ -344,4 +352,22 @@ public class MainActivity extends Activity {
             }
         }
     }
+
+    public class RotorGattServerCallback extends BluetoothGattServerCallback {
+
+        @Override
+        public void onConnectionStateChange(BluetoothDevice device, int status, int newState) {
+            super.onConnectionStateChange(device, status, newState);
+            Log.d("STUDEBUG", "onConnectionStateChange: " + newState);
+        }
+
+
+        @Override
+        public void onCharacteristicReadRequest(BluetoothDevice device, int requestId, int offset, BluetoothGattCharacteristic characteristic) {
+            super.onCharacteristicReadRequest(device, requestId, offset, characteristic);
+            Log.d("STUDEBUG", "onCharacteristicReadRequest " + characteristic.toString());
+            mGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, 0, null);
+        }
+    }
+
 }
