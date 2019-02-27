@@ -23,6 +23,10 @@ import android.widget.TextView;
 import ai.rotor.rotorvehicle.data.Blackbox;
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import io.reactivex.Observable;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Consumer;
+import io.reactivex.schedulers.Schedulers;
 import timber.log.Timber;
 
 import static ai.rotor.rotorvehicle.RotorUtils.ROTOR_TX_RX_SERVICE_UUID;
@@ -35,6 +39,7 @@ public class MainActivity extends Activity {
     private BluetoothManager mBluetoothManager;
     private Timber.DebugTree debugTree = new Timber.DebugTree();
     private Blackbox blackbox = new Blackbox();
+    Disposable blackboxSubscription;
     private RotorCtlService mRotorCtlService;
 
     //BLE
@@ -55,6 +60,15 @@ public class MainActivity extends Activity {
         ButterKnife.bind(this);
         Timber.plant(debugTree);
         Timber.plant(blackbox);
+
+
+        blackboxSubscription = blackbox.getBehaviorSubject().subscribe(new Consumer<String>() {
+            @Override
+            public void accept(String s) {
+                debugTextView.setText(String.format("%s\n%s", debugTextView.getText(), s));
+            }
+        });
+
         mBluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
         mBluetoothManager.getAdapter().setName("Vehicle");
 
@@ -81,6 +95,9 @@ public class MainActivity extends Activity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+
+        //unsubscribe RxJava stuff
+        blackboxSubscription.dispose();
 
         //Stop advertising
         mGattServer.close();
