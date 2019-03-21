@@ -27,6 +27,7 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
 import timber.log.Timber;
 
+import static ai.rotor.rotorvehicle.RotorUtils.ROTOR_TX_RX_CHARACTERISTIC_UUID;
 import static ai.rotor.rotorvehicle.RotorUtils.ROTOR_TX_RX_SERVICE_UUID;
 
 public class MainActivity extends Activity {
@@ -46,6 +47,7 @@ public class MainActivity extends Activity {
     private AdvertiseData mAdData;
     private AdvertiseSettings mAdSettings;
     private BluetoothGattServer mGattServer;
+    private BluetoothGattService mGattService;
     private AdvertiseCallback advertiseCallback;
 
     @BindView(R.id.debugText)
@@ -106,7 +108,11 @@ public class MainActivity extends Activity {
         mAdvertiser = mBluetoothManager.getAdapter().getBluetoothLeAdvertiser();
         mGattServerCallback = new RotorGattServerCallback();
         mGattServer = mBluetoothManager.openGattServer(this, mGattServerCallback);
-        mGattServer.addService(new BluetoothGattService(ROTOR_TX_RX_SERVICE_UUID, BluetoothGattService.SERVICE_TYPE_PRIMARY));
+        mGattService = new BluetoothGattService(ROTOR_TX_RX_SERVICE_UUID, BluetoothGattService.SERVICE_TYPE_PRIMARY);
+        BluetoothGattCharacteristic characteristic = new BluetoothGattCharacteristic(ROTOR_TX_RX_CHARACTERISTIC_UUID, BluetoothGattCharacteristic.PROPERTY_WRITE, BluetoothGattCharacteristic.PERMISSION_WRITE);
+        characteristic.setValue("ABCD1234");
+        mGattService.addCharacteristic(characteristic);
+        mGattServer.addService(mGattService);
 
         mAdSettings = new AdvertiseSettings.Builder()
                 .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_BALANCED)
