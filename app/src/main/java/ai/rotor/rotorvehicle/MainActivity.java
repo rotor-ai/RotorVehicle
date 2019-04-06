@@ -23,6 +23,7 @@ import android.widget.TextView;
 import ai.rotor.rotorvehicle.data.Blackbox;
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
 import timber.log.Timber;
@@ -62,7 +63,9 @@ public class MainActivity extends Activity {
         Timber.plant(blackbox);
 
 
-        blackboxSubscription = blackbox.getBehaviorSubject().subscribe(new Consumer<String>() {
+        blackboxSubscription = blackbox.getBehaviorSubject()
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Consumer<String>() {
             @Override
             public void accept(String s) {
                 debugTextView.setText(String.format("%s\n%s", debugTextView.getText(), s));
@@ -70,7 +73,7 @@ public class MainActivity extends Activity {
         }, new Consumer<Throwable>() {
             @Override
             public void accept(Throwable throwable) throws Exception {
-                Timber.d("An error occured");
+                Timber.d("blackbox error: " + throwable.getMessage());
             }
         });
 
@@ -114,8 +117,8 @@ public class MainActivity extends Activity {
         mGattServerCallback = new RotorGattServerCallback();
         mGattServer = mBluetoothManager.openGattServer(this, mGattServerCallback);
         mGattService = new BluetoothGattService(ROTOR_TX_RX_SERVICE_UUID, BluetoothGattService.SERVICE_TYPE_PRIMARY);
-        BluetoothGattCharacteristic characteristic = new BluetoothGattCharacteristic(ROTOR_TX_RX_CHARACTERISTIC_UUID, BluetoothGattCharacteristic.PROPERTY_READ, BluetoothGattCharacteristic.PERMISSION_READ);
-        characteristic.setValue("ABCD1234");
+        BluetoothGattCharacteristic characteristic = new BluetoothGattCharacteristic(ROTOR_TX_RX_CHARACTERISTIC_UUID, BluetoothGattCharacteristic.PROPERTY_WRITE, BluetoothGattCharacteristic.PERMISSION_WRITE);
+        characteristic.setValue(new byte[] {0x00, 0x01, 0x02, 0x03});
         mGattService.addCharacteristic(characteristic);
         mGattServer.addService(mGattService);
 
@@ -160,6 +163,11 @@ public class MainActivity extends Activity {
         return mBluetoothManager.getAdapter().isMultipleAdvertisementSupported();
     }
 
+    private void logStuff(String s){
+
+        Timber.d(s);
+    }
+
     public class RotorGattServerCallback extends BluetoothGattServerCallback {
 
         @Override
@@ -182,7 +190,7 @@ public class MainActivity extends Activity {
         public void onCharacteristicWriteRequest(BluetoothDevice device, int requestId, BluetoothGattCharacteristic characteristic, boolean preparedWrite, boolean responseNeeded, int offset, byte[] value) {
             super.onCharacteristicWriteRequest(device, requestId, characteristic, preparedWrite, responseNeeded, offset, value);
             String s = value.toString();
-            Timber.d(s);
+            logStuff("onCharacteristicWriteRequest");
         }
     }
 

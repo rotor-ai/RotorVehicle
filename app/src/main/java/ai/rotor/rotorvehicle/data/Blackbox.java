@@ -18,7 +18,7 @@ public class Blackbox extends Timber.Tree {
 
     @Override
     protected void log(int priority, @Nullable String tag, @NotNull String message, @Nullable Throwable t) {
-        behaviorSubject.onNext(tag + " : " + message);
+        behaviorSubject.onNext(message);
     }
 
     public Observable<String> getBehaviorSubject() {
