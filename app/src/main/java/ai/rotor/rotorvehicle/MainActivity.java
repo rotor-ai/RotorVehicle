@@ -67,6 +67,11 @@ public class MainActivity extends Activity {
             public void accept(String s) {
                 debugTextView.setText(String.format("%s\n%s", debugTextView.getText(), s));
             }
+        }, new Consumer<Throwable>() {
+            @Override
+            public void accept(Throwable throwable) throws Exception {
+                Timber.d("An error occured");
+            }
         });
 
         mBluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
@@ -109,7 +114,7 @@ public class MainActivity extends Activity {
         mGattServerCallback = new RotorGattServerCallback();
         mGattServer = mBluetoothManager.openGattServer(this, mGattServerCallback);
         mGattService = new BluetoothGattService(ROTOR_TX_RX_SERVICE_UUID, BluetoothGattService.SERVICE_TYPE_PRIMARY);
-        BluetoothGattCharacteristic characteristic = new BluetoothGattCharacteristic(ROTOR_TX_RX_CHARACTERISTIC_UUID, BluetoothGattCharacteristic.PROPERTY_WRITE, BluetoothGattCharacteristic.PERMISSION_WRITE);
+        BluetoothGattCharacteristic characteristic = new BluetoothGattCharacteristic(ROTOR_TX_RX_CHARACTERISTIC_UUID, BluetoothGattCharacteristic.PROPERTY_READ, BluetoothGattCharacteristic.PERMISSION_READ);
         characteristic.setValue("ABCD1234");
         mGattService.addCharacteristic(characteristic);
         mGattServer.addService(mGattService);
@@ -167,8 +172,17 @@ public class MainActivity extends Activity {
         @Override
         public void onCharacteristicReadRequest(BluetoothDevice device, int requestId, int offset, BluetoothGattCharacteristic characteristic) {
             super.onCharacteristicReadRequest(device, requestId, offset, characteristic);
-            Log.d("STUDEBUG", "onCharacteristicReadRequest " + characteristic.toString());
-            mGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, 0, null);
+            Timber.d("onCharacteristicReadRequest ");
+            String s = "this is a reponse";
+            byte[] bytes = s.getBytes();
+            mGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, 0, bytes);
+        }
+
+        @Override
+        public void onCharacteristicWriteRequest(BluetoothDevice device, int requestId, BluetoothGattCharacteristic characteristic, boolean preparedWrite, boolean responseNeeded, int offset, byte[] value) {
+            super.onCharacteristicWriteRequest(device, requestId, characteristic, preparedWrite, responseNeeded, offset, value);
+            String s = value.toString();
+            Timber.d(s);
         }
     }
 
