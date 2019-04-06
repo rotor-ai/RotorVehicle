@@ -117,7 +117,7 @@ public class MainActivity extends Activity {
         mGattServerCallback = new RotorGattServerCallback();
         mGattServer = mBluetoothManager.openGattServer(this, mGattServerCallback);
         mGattService = new BluetoothGattService(ROTOR_TX_RX_SERVICE_UUID, BluetoothGattService.SERVICE_TYPE_PRIMARY);
-        BluetoothGattCharacteristic characteristic = new BluetoothGattCharacteristic(ROTOR_TX_RX_CHARACTERISTIC_UUID, BluetoothGattCharacteristic.PROPERTY_WRITE, BluetoothGattCharacteristic.PERMISSION_WRITE);
+        BluetoothGattCharacteristic characteristic = new BluetoothGattCharacteristic(ROTOR_TX_RX_CHARACTERISTIC_UUID, BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE, BluetoothGattCharacteristic.PERMISSION_WRITE);
         characteristic.setValue(new byte[] {0x00, 0x01, 0x02, 0x03});
         mGattService.addCharacteristic(characteristic);
         mGattServer.addService(mGattService);
@@ -163,11 +163,6 @@ public class MainActivity extends Activity {
         return mBluetoothManager.getAdapter().isMultipleAdvertisementSupported();
     }
 
-    private void logStuff(String s){
-
-        Timber.d(s);
-    }
-
     public class RotorGattServerCallback extends BluetoothGattServerCallback {
 
         @Override
@@ -189,8 +184,8 @@ public class MainActivity extends Activity {
         @Override
         public void onCharacteristicWriteRequest(BluetoothDevice device, int requestId, BluetoothGattCharacteristic characteristic, boolean preparedWrite, boolean responseNeeded, int offset, byte[] value) {
             super.onCharacteristicWriteRequest(device, requestId, characteristic, preparedWrite, responseNeeded, offset, value);
-            String s = value.toString();
-            logStuff("onCharacteristicWriteRequest");
+            String s = new String(value, 0, value.length);
+            Timber.d("onCharacteristicWriteRequest: " + s);
         }
     }
 
