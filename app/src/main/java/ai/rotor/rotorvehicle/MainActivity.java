@@ -23,12 +23,12 @@ import android.widget.TextView;
 import ai.rotor.rotorvehicle.data.Blackbox;
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import io.reactivex.Observable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
-import io.reactivex.schedulers.Schedulers;
 import timber.log.Timber;
 
+import static ai.rotor.rotorvehicle.RotorUtils.ROTOR_TX_RX_CHARACTERISTIC_UUID;
 import static ai.rotor.rotorvehicle.RotorUtils.ROTOR_TX_RX_SERVICE_UUID;
 
 public class MainActivity extends Activity {
@@ -48,6 +48,7 @@ public class MainActivity extends Activity {
     private AdvertiseData mAdData;
     private AdvertiseSettings mAdSettings;
     private BluetoothGattServer mGattServer;
+    private BluetoothGattService mGattService;
     private AdvertiseCallback advertiseCallback;
 
     @BindView(R.id.debugText)
@@ -62,10 +63,17 @@ public class MainActivity extends Activity {
         Timber.plant(blackbox);
 
 
-        blackboxSubscription = blackbox.getBehaviorSubject().subscribe(new Consumer<String>() {
+        blackboxSubscription = blackbox.getBehaviorSubject()
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Consumer<String>() {
             @Override
             public void accept(String s) {
                 debugTextView.setText(String.format("%s\n%s", debugTextView.getText(), s));
+            }
+        }, new Consumer<Throwable>() {
+            @Override
+            public void accept(Throwable throwable) throws Exception {
+                Timber.d("blackbox error: " + throwable.getMessage());
             }
         });
 
@@ -79,8 +87,8 @@ public class MainActivity extends Activity {
         Timber.d("supports multi advertisement: %s", doesSupportMultiAdvertisement());
 
         // Start the Rotor control service thread
-        //mRotorCtlService = new RotorCtlService(this);
-        //mRotorCtlService.run();
+        mRotorCtlService = new RotorCtlService(this);
+        mRotorCtlService.run();
 
         setupGATTServer();
         beginAdvertisement();
@@ -108,7 +116,11 @@ public class MainActivity extends Activity {
         mAdvertiser = mBluetoothManager.getAdapter().getBluetoothLeAdvertiser();
         mGattServerCallback = new RotorGattServerCallback();
         mGattServer = mBluetoothManager.openGattServer(this, mGattServerCallback);
-        mGattServer.addService(new BluetoothGattService(ROTOR_TX_RX_SERVICE_UUID, BluetoothGattService.SERVICE_TYPE_PRIMARY));
+        mGattService = new BluetoothGattService(ROTOR_TX_RX_SERVICE_UUID, BluetoothGattService.SERVICE_TYPE_PRIMARY);
+        BluetoothGattCharacteristic characteristic = new BluetoothGattCharacteristic(ROTOR_TX_RX_CHARACTERISTIC_UUID, BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE, BluetoothGattCharacteristic.PERMISSION_WRITE);
+        characteristic.setValue(new byte[] {0x00, 0x01, 0x02, 0x03});
+        mGattService.addCharacteristic(characteristic);
+        mGattServer.addService(mGattService);
 
         mAdSettings = new AdvertiseSettings.Builder()
                 .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_BALANCED)
@@ -163,8 +175,18 @@ public class MainActivity extends Activity {
         @Override
         public void onCharacteristicReadRequest(BluetoothDevice device, int requestId, int offset, BluetoothGattCharacteristic characteristic) {
             super.onCharacteristicReadRequest(device, requestId, offset, characteristic);
-            Log.d("STUDEBUG", "onCharacteristicReadRequest " + characteristic.toString());
-            mGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, 0, null);
+            Timber.d("onCharacteristicReadRequest ");
+            String s = "this is a reponse";
+            byte[] bytes = s.getBytes();
+            mGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, 0, bytes);
+        }
+
+        @Override
+        public void onCharacteristicWriteRequest(BluetoothDevice device, int requestId, BluetoothGattCharacteristic characteristic, boolean preparedWrite, boolean responseNeeded, int offset, byte[] value) {
+            super.onCharacteristicWriteRequest(device, requestId, characteristic, preparedWrite, responseNeeded, offset, value);
+            String s = new String(value, 0, value.length);
+            Timber.d("onCharacteristicWriteRequest: " + s);
+            mRotorCtlService.sendCommand(s);
         }
     }
 
