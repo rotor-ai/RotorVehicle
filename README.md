@@ -2,6 +2,8 @@
 
 The RotorVehicle library provides an architecture for controlling an Android-based autonomous vehicle. The Rotor can either be controlled manually from a client, or in autonomous mode (coming soon). 
 
+<img src="https://github.com/rotor-ai/RotorVehicle/blob/develop/screenshot.png" width="350px"/>
+
 ## Getting Started
 
 ### Prerequisites
