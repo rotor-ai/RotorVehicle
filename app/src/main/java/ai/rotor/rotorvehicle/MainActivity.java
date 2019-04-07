@@ -20,6 +20,7 @@ import android.os.ParcelUuid;
 import android.util.Log;
 import android.widget.TextView;
 
+import ai.rotor.rotorvehicle.ai_agent.RotorAiService;
 import ai.rotor.rotorvehicle.data.Blackbox;
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -41,6 +42,7 @@ public class MainActivity extends Activity {
     private Blackbox blackbox = new Blackbox();
     Disposable blackboxSubscription;
     private RotorCtlService mRotorCtlService;
+    private RotorAiService mRotorAiService;
 
     //BLE
     private RotorGattServerCallback mGattServerCallback;
@@ -92,6 +94,7 @@ public class MainActivity extends Activity {
 
         setupGATTServer();
         beginAdvertisement();
+
     }
 
     @Override
