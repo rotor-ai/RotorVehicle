@@ -57,6 +57,7 @@ dependencies {
     kaptTest 'com.google.dagger:dagger-compiler:2.22.1'
 
     implementation project(':OpenCVLibrary401')
+    implementation project(':OpenCVLibrary401')
 }
 repositories {
     mavenCentral()
