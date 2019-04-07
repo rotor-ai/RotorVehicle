@@ -87,8 +87,8 @@ public class MainActivity extends Activity {
         Timber.d("supports multi advertisement: %s", doesSupportMultiAdvertisement());
 
         // Start the Rotor control service thread
-        //mRotorCtlService = new RotorCtlService(this);
-        //mRotorCtlService.run();
+        mRotorCtlService = new RotorCtlService(this);
+        mRotorCtlService.run();
 
         setupGATTServer();
         beginAdvertisement();
@@ -186,6 +186,7 @@ public class MainActivity extends Activity {
             super.onCharacteristicWriteRequest(device, requestId, characteristic, preparedWrite, responseNeeded, offset, value);
             String s = new String(value, 0, value.length);
             Timber.d("onCharacteristicWriteRequest: " + s);
+            mRotorCtlService.sendCommand(s);
         }
     }
 
