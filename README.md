@@ -13,7 +13,7 @@ The RotorVehicle library has been tested with the following configuration:
 Additional Hardware:
 - Android or iOS device running the Rotor `mobileclient` library - https://github.com/rotor-ai/mobileclient
 - Arduino running the `RotorArduino` motor controller library - https://github.com/rotor-ai/RotorArduino
-- RC car with PWM speed control and servo for steering - a good starting point is the Exceed Short Course Desert Truck - [Amazon](https://www.amazon.com/Exceed-Racing-Desert-Course-2-4ghz/dp/9269802108/ref=sr_1_fkmrnull_1?keywords=Exceed+Racing+Desert+Short+Course+Truck&qid=1554669149&s=toys-and-games&sr=1-1-fkmrnull)
+- RC car with PWM speed control and servo for steering - a good starting point is the Exceed Racing Desert Short Course Truck - [Amazon](https://www.amazon.com/Exceed-Racing-Desert-Course-2-4ghz/dp/9269802108/ref=sr_1_fkmrnull_1?keywords=Exceed+Racing+Desert+Short+Course+Truck&qid=1554669149&s=toys-and-games&sr=1-1-fkmrnull)
 - (Optional) A Raspberry Pi LCD screen can be used for logging and debugging - [Amazon](https://www.amazon.com/gp/product/B0153R2A9I/ref=ppx_od_dt_b_asin_title_s01?ie=UTF8&psc=1)
 
 ### Installing
@@ -21,7 +21,7 @@ Additional Hardware:
 Download the RotorVehicle library to your computer:
 
 ```
-git clone <RotorVehicle-repo>
+git clone https://github.com/rotor-ai/RotorVehicle
 ```
 
 Upload the code to the pi, and you're off!
