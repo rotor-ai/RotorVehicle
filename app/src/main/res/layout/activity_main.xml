@@ -18,3 +18,23 @@
         app:layout_constraintBottom_toBottomOf="parent"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
+    <Button
+        android:id="@+id/autoBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="AUTO"
+        app:layout_constraintEnd_toEndOf="@+id/imageView"
+        app:layout_constraintStart_toStartOf="@+id/imageView"
+        app:layout_constraintTop_toTopOf="parent" />
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:maxWidth="150dp"
+        android:maxHeight="150dp"
+        app:layout_constraintStart_toEndOf="@+id/debugText"
+        app:layout_constraintTop_toBottomOf="@+id/autoBtn"
+        tools:srcCompat="@tools:sample/avatars" />
