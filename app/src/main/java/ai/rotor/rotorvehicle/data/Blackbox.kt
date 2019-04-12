@@ -5,14 +5,20 @@ import timber.log.Timber
 
 class Blackbox : Timber.Tree() {
 
-    val behaviorSubject = BehaviorSubject.create<String>()
+    val subject = BehaviorSubject.create<List<String>>()
+    private val mahLogs = arrayListOf(startupMsg)
 
     init {
-        behaviorSubject.onNext("==========BEGINNING OF BLACKBOX LOG==========")
+        subject.onNext(mahLogs)
     }
 
     override fun log(priority: Int, tag: String?, message: String, t: Throwable?) {
-        behaviorSubject.onNext(message)
+        mahLogs.add(message)
+        subject.onNext(mahLogs)
+    }
+
+    companion object {
+        const val startupMsg = "==========BEGINNING OF BLACKBOX LOG=========="
     }
 
 }

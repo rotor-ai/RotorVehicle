@@ -62,20 +62,19 @@ public class MainActivity extends Activity {
         Timber.plant(debugTree);
         Timber.plant(blackbox);
 
-
-        blackboxSubscription = blackbox.getBehaviorSubject()
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Consumer<String>() {
-            @Override
-            public void accept(String s) {
-                debugTextView.setText(String.format("%s\n%s", debugTextView.getText(), s));
-            }
-        }, new Consumer<Throwable>() {
-            @Override
-            public void accept(Throwable throwable) throws Exception {
-                Timber.d("blackbox error: " + throwable.getMessage());
-            }
-        });
+//        blackboxSubscription = blackbox.getSubject()
+//                .observeOn(AndroidSchedulers.mainThread())
+//                .subscribe(new Consumer<String>() {
+//            @Override
+//            public void accept(String s) {
+//                debugTextView.setText(String.format("%s\n%s", debugTextView.getText(), s));
+//            }
+//        }, new Consumer<Throwable>() {
+//            @Override
+//            public void accept(Throwable throwable) throws Exception {
+//                Timber.d("blackbox error: " + throwable.getMessage());
+//            }
+//        });
 
         mBluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
         mBluetoothManager.getAdapter().setName("Vehicle");
