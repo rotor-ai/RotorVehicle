@@ -1,12 +1,21 @@
 package ai.rotor.rotorvehicle.data
 
-import org.junit.Before
-
-import org.junit.Assert.*
+import io.reactivex.observers.TestObserver
+import org.junit.Test
 
 class BlackboxTest {
 
-    @Before
-    fun setUp() {
+    @Test
+    fun `Should emit starting log event when constructed`() {
+        val blackbox = Blackbox()
+
+        val testObserver = TestObserver<String>()
+
+        blackbox.behaviorSubject.subscribe(testObserver)
+
+        testObserver.assertValue("==========BEGINNING OF BLACKBOX LOG==========")
+
+        testObserver.dispose()
+
     }
 }
