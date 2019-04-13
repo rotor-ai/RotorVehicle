@@ -1,6 +1,7 @@
 package ai.rotor.rotorvehicle.data
 
 import ai.rotor.rotorvehicle.data.Blackbox.Companion.startupMsg
+import junit.framework.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 
@@ -17,12 +18,12 @@ class BlackboxTest {
     fun `Should emit starting log event when constructed`() { //ARRANGE
         //ACT
         val testObserver = blackbox.subject.test()
-        testObserver.onComplete()
 
         //ASSERT
-        testObserver.assertComplete()
         testObserver.assertValueCount(1)
-        testObserver.assertValue { t -> t.contains(startupMsg) && t.count() == 1 }
+        testObserver.assertValue(startupMsg)
+        assertEquals(1, blackbox.getLogs().count())
+        assertEquals(startupMsg, blackbox.getLogs().first())
     }
 
     @Test
@@ -32,12 +33,12 @@ class BlackboxTest {
 
         //ACT
         blackbox.d("Something happened")
-        blackbox.subject.onComplete()
 
         //ASSERT
-        testObserver.assertComplete()
         testObserver.assertValueCount(2)
-        testObserver.assertValueAt(1) { t -> t.containsAll(arrayListOf(startupMsg, "Something happened")) }
+        testObserver.assertValues(startupMsg, "Something happened")
+        assertEquals(2, blackbox.getLogs().count())
+        assertEquals("Something happened", blackbox.getLogs().last())
     }
 
 }
