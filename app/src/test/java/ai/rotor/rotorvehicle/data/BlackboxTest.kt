@@ -1,5 +1,6 @@
 package ai.rotor.rotorvehicle.data
 
+import ai.rotor.rotorvehicle.dagger.DaggerRotorTestComponent
 import ai.rotor.rotorvehicle.data.Blackbox.Companion.startupMsg
 import junit.framework.Assert.assertEquals
 import org.junit.Before
@@ -11,7 +12,7 @@ class BlackboxTest {
 
     @Before
     fun setup() {
-        blackbox = Blackbox()
+        blackbox = DaggerRotorTestComponent.create().blackbox()
     }
 
     @Test

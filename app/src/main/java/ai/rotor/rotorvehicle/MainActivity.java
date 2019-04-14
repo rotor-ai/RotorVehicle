@@ -20,27 +20,24 @@ import android.os.ParcelUuid;
 import android.util.Log;
 import android.widget.TextView;
 
+import ai.rotor.rotorvehicle.dagger.DaggerRotorComponent;
 import ai.rotor.rotorvehicle.data.Blackbox;
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
-import io.reactivex.functions.Consumer;
 import timber.log.Timber;
 
 import static ai.rotor.rotorvehicle.RotorUtils.ROTOR_TX_RX_CHARACTERISTIC_UUID;
 import static ai.rotor.rotorvehicle.RotorUtils.ROTOR_TX_RX_SERVICE_UUID;
 
 public class MainActivity extends Activity {
-    private static final int REQUEST_ENABLE_BT = 2;
-    private static final int REQUEST_PAIR_BT = 3;
     private static final int DISCOVERABLE_DURATION = 30;
 
     private BluetoothManager mBluetoothManager;
     private Timber.DebugTree debugTree = new Timber.DebugTree();
-    private Blackbox blackbox = new Blackbox();
     Disposable blackboxSubscription;
     private RotorCtlService mRotorCtlService;
+    private Blackbox blackbox;
 
     //BLE
     private RotorGattServerCallback mGattServerCallback;
@@ -57,10 +54,15 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        blackbox = DaggerRotorComponent.create().blackbox();
+
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
         Timber.plant(debugTree);
         Timber.plant(blackbox);
+
+
 
 //        blackboxSubscription = blackbox.getSubject()
 //                .observeOn(AndroidSchedulers.mainThread())
@@ -117,7 +119,7 @@ public class MainActivity extends Activity {
         mGattServer = mBluetoothManager.openGattServer(this, mGattServerCallback);
         mGattService = new BluetoothGattService(ROTOR_TX_RX_SERVICE_UUID, BluetoothGattService.SERVICE_TYPE_PRIMARY);
         BluetoothGattCharacteristic characteristic = new BluetoothGattCharacteristic(ROTOR_TX_RX_CHARACTERISTIC_UUID, BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE, BluetoothGattCharacteristic.PERMISSION_WRITE);
-        characteristic.setValue(new byte[] {0x00, 0x01, 0x02, 0x03});
+        characteristic.setValue(new byte[]{0x00, 0x01, 0x02, 0x03});
         mGattService.addCharacteristic(characteristic);
         mGattServer.addService(mGattService);
 
