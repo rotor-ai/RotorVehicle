@@ -1,4 +1,4 @@
-package ai.rotor.rotorvehicle;
+package ai.rotor.rotorvehicle.ui.monitor;
 
 import android.app.Activity;
 import android.bluetooth.BluetoothDevice;
@@ -20,8 +20,11 @@ import android.os.ParcelUuid;
 import android.util.Log;
 import android.widget.TextView;
 
+import ai.rotor.rotorvehicle.R;
+import ai.rotor.rotorvehicle.RotorCtlService;
 import ai.rotor.rotorvehicle.dagger.DaggerRotorComponent;
 import ai.rotor.rotorvehicle.data.Blackbox;
+import androidx.recyclerview.widget.RecyclerView;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import io.reactivex.disposables.Disposable;
@@ -48,13 +51,14 @@ public class MainActivity extends Activity {
     private BluetoothGattService mGattService;
     private AdvertiseCallback advertiseCallback;
 
+    @BindView(R.id.LogRecyclerView)
+    RecyclerView logRecyclerView;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        blackbox = DaggerRotorComponent.create().blackbox();
-
         setContentView(R.layout.activity_main);
+        blackbox = DaggerRotorComponent.create().blackbox();
         ButterKnife.bind(this);
         Timber.plant(debugTree);
         Timber.plant(blackbox);
@@ -166,7 +170,7 @@ public class MainActivity extends Activity {
         @Override
         public void onConnectionStateChange(BluetoothDevice device, int status, int newState) {
             super.onConnectionStateChange(device, status, newState);
-            Log.d("STUDEBUG", "onConnectionStateChange: " + newState);
+            Timber.d("onConnectionStateChange: %s", newState);
         }
 
 
@@ -183,7 +187,7 @@ public class MainActivity extends Activity {
         public void onCharacteristicWriteRequest(BluetoothDevice device, int requestId, BluetoothGattCharacteristic characteristic, boolean preparedWrite, boolean responseNeeded, int offset, byte[] value) {
             super.onCharacteristicWriteRequest(device, requestId, characteristic, preparedWrite, responseNeeded, offset, value);
             String s = new String(value, 0, value.length);
-            Timber.d("onCharacteristicWriteRequest: " + s);
+            Timber.d("onCharacteristicWriteRequest: %s", s);
             mRotorCtlService.sendCommand(s);
         }
     }
