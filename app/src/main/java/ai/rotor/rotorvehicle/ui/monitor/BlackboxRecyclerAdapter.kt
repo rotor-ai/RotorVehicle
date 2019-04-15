@@ -21,7 +21,7 @@ class BlackboxRecyclerAdapter(private val source: Blackbox) : RecyclerView.Adapt
     override fun getItemCount(): Int = source.getLogs().count()
 
     override fun onBindViewHolder(holder: BlackboxViewHolder, position: Int) {
-        holder.loglineTextView.text = "ungabunga"
+        holder.loglineTextView.text = source.getLogs()[position]
     }
 
     inner class BlackboxViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {

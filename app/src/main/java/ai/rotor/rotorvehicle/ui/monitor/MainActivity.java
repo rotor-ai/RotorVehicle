@@ -32,7 +32,9 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Consumer;
 import timber.log.Timber;
 
 import static ai.rotor.rotorvehicle.RotorUtils.ROTOR_TX_RX_CHARACTERISTIC_UUID;
@@ -74,6 +76,21 @@ public class MainActivity extends Activity {
 
         Timber.plant(debugTree);
         Timber.plant(blackbox);
+
+        blackboxSubscription = blackbox.getSubject()
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Consumer<String>() {
+                    @Override
+                    public void accept(String s) throws Exception {
+                        Log.d("STUDEBUG", "onNext");
+                        blackboxRecyclerAdapter.notifyDataSetChanged();
+                    }
+                }, new Consumer<Throwable>() {
+                    @Override
+                    public void accept(Throwable throwable) throws Exception {
+                        Timber.d(throwable.toString());
+                    }
+                });
 
 //        blackboxSubscription = blackbox.getSubject()
 //                .observeOn(AndroidSchedulers.mainThread())
