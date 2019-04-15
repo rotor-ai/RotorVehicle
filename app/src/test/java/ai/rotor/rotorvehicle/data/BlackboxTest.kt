@@ -16,30 +16,35 @@ class BlackboxTest {
     }
 
     @Test
-    fun `Should emit starting log event when constructed`() { //ARRANGE
+    fun `Should emit starting log event when constructed`() {
+        //ARRANGE
+        val expectedLog = "[2019AD-01-02 13:45:56.123 UTC] $startupMsg"
+
         //ACT
         val testObserver = blackbox.subject.test()
 
         //ASSERT
         testObserver.assertValueCount(1)
-        testObserver.assertValue(startupMsg)
+        testObserver.assertValue(expectedLog)
         assertEquals(1, blackbox.getLogs().count())
-        assertEquals(startupMsg, blackbox.getLogs().first())
+        assertEquals(expectedLog, blackbox.getLogs().first())
     }
 
     @Test
     fun `Should emit updated list for every new log`() {
         //ARRANGE
         val testObserver = blackbox.subject.test()
+        val expectedLog1 = "[2019AD-01-02 13:45:56.123 UTC] $startupMsg"
+        val expectedLog2 = "[2019AD-01-02 13:45:56.123 UTC] Something happened"
 
         //ACT
         blackbox.d("Something happened")
 
         //ASSERT
         testObserver.assertValueCount(2)
-        testObserver.assertValues(startupMsg, "Something happened")
+        testObserver.assertValues(expectedLog1, expectedLog2)
         assertEquals(2, blackbox.getLogs().count())
-        assertEquals("Something happened", blackbox.getLogs().last())
+        assertEquals(expectedLog2, blackbox.getLogs().last())
     }
 
 }
