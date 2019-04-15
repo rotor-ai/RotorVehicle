@@ -16,7 +16,7 @@ class Blackbox @Inject constructor(val clock: Clock) : Timber.Tree() {
     val subject = BehaviorSubject.create<String>()
     private val mahLogs = arrayListOf<String>()
     private val timestampFormat: DateTimeFormatter = DateTimeFormatterBuilder()
-            .appendPattern("YYYYG-MM-DD HH:mm:ss.SSS ")
+            .appendPattern("YYYYG-MM-dd HH:mm:ss.SSS ")
             .appendZoneText(TextStyle.SHORT)
             .toFormatter()
 

@@ -5,6 +5,10 @@ import ai.rotor.rotorvehicle.data.Blackbox.Companion.startupMsg
 import junit.framework.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
+import java.time.Clock
+import java.time.ZoneId
+import java.time.temporal.ChronoField
+import java.util.*
 
 class BlackboxTest {
 
@@ -28,6 +32,28 @@ class BlackboxTest {
         testObserver.assertValue(expectedLog)
         assertEquals(1, blackbox.getLogs().count())
         assertEquals(expectedLog, blackbox.getLogs().first())
+    }
+
+    @Test
+    fun `Should correctly print timestamp late in the year`() {
+
+        //ARRANGE
+        val expectedLog = "[2019AD-12-25 14:00:00.000 UTC] $startupMsg"
+        val calendar = GregorianCalendar(TimeZone.getTimeZone("UTC"))
+        calendar.set(2019, 11, 25, 14, 0,0)
+        var instant = calendar.toInstant()
+        instant = instant.minusMillis(instant[ChronoField.MILLI_OF_SECOND].toLong())
+        blackbox = Blackbox(Clock.fixed(instant, ZoneId.of("UTC")))
+
+        //ACT
+        val testObserver = blackbox.subject.test()
+
+        //ASSERT
+        testObserver.assertValueCount(1)
+        testObserver.assertValue(expectedLog)
+        assertEquals(1, blackbox.getLogs().count())
+        assertEquals(expectedLog, blackbox.getLogs().first())
+
     }
 
     @Test

@@ -11,6 +11,7 @@ import java.util.*
 @Module
 class RotorTestModule {
 
+    //We use a statically set time so that tests don't randomly fail based on what the current real world time is.
     @Provides
     fun provideClock(): Clock {
         val calendar = GregorianCalendar(TimeZone.getTimeZone("UTC"))
