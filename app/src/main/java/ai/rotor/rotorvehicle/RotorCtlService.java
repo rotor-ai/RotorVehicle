@@ -17,7 +17,6 @@ public class RotorCtlService extends Thread {
     public RotorCtlService(Context context) {
         mContext = context;
         mRotorState = State.HOMED;
-
     }
 
     public void run() {

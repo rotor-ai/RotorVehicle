@@ -18,12 +18,17 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.ParcelUuid;
 import android.util.Log;
+import android.view.View;
 import android.widget.TextView;
+
+import org.w3c.dom.Text;
 
 import ai.rotor.rotorvehicle.R;
 import ai.rotor.rotorvehicle.RotorCtlService;
 import ai.rotor.rotorvehicle.dagger.DaggerRotorComponent;
 import ai.rotor.rotorvehicle.data.Blackbox;
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -41,6 +46,7 @@ public class MainActivity extends Activity {
     Disposable blackboxSubscription;
     private RotorCtlService mRotorCtlService;
     private Blackbox blackbox;
+    private BlackboxRecyclerAdapter blackboxRecyclerAdapter;
 
     //BLE
     private RotorGattServerCallback mGattServerCallback;
@@ -58,12 +64,16 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        blackbox = DaggerRotorComponent.create().blackbox();
         ButterKnife.bind(this);
+
+        blackbox = DaggerRotorComponent.create().blackbox();
+
+        blackboxRecyclerAdapter = new BlackboxRecyclerAdapter(blackbox);
+        logRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        logRecyclerView.setAdapter(blackboxRecyclerAdapter);
+
         Timber.plant(debugTree);
         Timber.plant(blackbox);
-
-
 
 //        blackboxSubscription = blackbox.getSubject()
 //                .observeOn(AndroidSchedulers.mainThread())
