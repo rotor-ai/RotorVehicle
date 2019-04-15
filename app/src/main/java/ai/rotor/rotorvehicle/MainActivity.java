@@ -18,9 +18,12 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.ParcelUuid;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 
 import ai.rotor.rotorvehicle.ai_agent.RotorAiService;
+import ai.rotor.rotorvehicle.ai_agent.RotorCamera;
 import ai.rotor.rotorvehicle.data.Blackbox;
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -43,6 +46,7 @@ public class MainActivity extends Activity {
     Disposable blackboxSubscription;
     private RotorCtlService mRotorCtlService;
     private RotorAiService mRotorAiService;
+    private boolean mAutoMode;
 
     //BLE
     private RotorGattServerCallback mGattServerCallback;
@@ -53,8 +57,8 @@ public class MainActivity extends Activity {
     private BluetoothGattService mGattService;
     private AdvertiseCallback advertiseCallback;
 
-    @BindView(R.id.debugText)
-    TextView debugTextView;
+    @BindView(R.id.debugText) TextView debugTextView;
+    @BindView(R.id.autoBtn) Button mAutoBtn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -95,6 +99,23 @@ public class MainActivity extends Activity {
         setupGATTServer();
         beginAdvertisement();
 
+        // Ai Agent Setup
+        mAutoMode = false;
+        final RotorAiService mRotorAiService = new RotorAiService(this);
+        mRotorAiService.run();
+
+        mAutoBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (!mAutoMode) {
+                    mRotorAiService.startAutoMode();
+                    showAuto();
+                } else {
+                    mRotorAiService.stopAutoMode();
+                    showManual();
+                }
+            }
+        });
     }
 
     @Override
@@ -191,6 +212,16 @@ public class MainActivity extends Activity {
             Timber.d("onCharacteristicWriteRequest: " + s);
             mRotorCtlService.sendCommand(s);
         }
+    }
+
+    private void showAuto() {
+        mAutoBtn.setText("MANUAL");
+        mAutoMode = true;
+    }
+
+    private void showManual() {
+        mAutoBtn.setText("AUTO");
+        mAutoMode = false;
     }
 
 }
