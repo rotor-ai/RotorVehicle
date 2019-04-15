@@ -8,6 +8,7 @@ import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeFormatterBuilder
 import java.time.format.TextStyle
+import java.util.*
 import javax.inject.Inject
 
 
@@ -16,8 +17,8 @@ class Blackbox @Inject constructor(val clock: Clock) : Timber.Tree() {
     val subject = BehaviorSubject.create<String>()
     private val mahLogs = arrayListOf<String>()
     private val timestampFormat: DateTimeFormatter = DateTimeFormatterBuilder()
-            .appendPattern("YYYYG-MM-dd HH:mm:ss.SSS ")
-            .appendZoneText(TextStyle.SHORT)
+            .appendPattern("YYYY-MM-dd HH:mm:ss.SSS ")
+            .appendZoneText(TextStyle.NARROW)
             .toFormatter()
 
     init {
@@ -37,7 +38,7 @@ class Blackbox @Inject constructor(val clock: Clock) : Timber.Tree() {
 
     private fun getFormattedTimeStamp(): String {
 
-        val timestamp = ZonedDateTime.ofInstant(clock.instant(), ZoneId.of("UTC")).format(timestampFormat)
+        val timestamp = ZonedDateTime.ofInstant(clock.instant(), TimeZone.getTimeZone("UTC").toZoneId()).format(timestampFormat)
 
         return "[$timestamp]"
     }
