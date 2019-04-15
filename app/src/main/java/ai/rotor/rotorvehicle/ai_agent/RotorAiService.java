@@ -13,6 +13,7 @@ import android.os.HandlerThread;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.LoaderCallbackInterface;
+import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
@@ -40,6 +41,7 @@ public class RotorAiService implements Runnable {
                 } break;
                 default:
                 {
+
                     super.onManagerConnected(status);
 
                 } break;
@@ -47,9 +49,25 @@ public class RotorAiService implements Runnable {
         }
     };
 
-    public void RotorAiService(Context context) {
+    public RotorAiService(Context context) {
         Timber.d("Creating RotorAiService");
         this.mMainContext = context;
+    }
+
+    public void startAutoMode() {
+        mCamera.startCapturing();
+    }
+
+    public void stopAutoMode() {
+        mCamera.stopCapturing();
+    }
+
+
+    private Context getMainContext() { return mMainContext; }
+
+
+    @Override
+    public void run() {
 
         if (mMainContext.checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
             Timber.d("No permission");
@@ -62,15 +80,14 @@ public class RotorAiService implements Runnable {
         mCamera = RotorCamera.getInstance();
         mCamera.initializeCamera(mMainContext, mCameraHandler, mOnImageAvailableListener);
 
-    }
+        if (!OpenCVLoader.initDebug()) {
+            Timber.d("Internal OpenCV library not found. Using OpenCV Manager for initialization");
+            OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_0_0, mMainContext, mLoaderCallback);
+        } else {
+            Timber.d("OpenCV library found inside package. Using it!");
+            mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
+        }
 
-
-    private Context getMainContext() { return mMainContext; }
-
-
-    @Override
-    public void run() {
-        mCamera.startCapturing();
     }
 
 
