@@ -48,9 +48,6 @@ public class MainActivity extends Activity {
     private BluetoothGattService mGattService;
     private AdvertiseCallback advertiseCallback;
 
-    @BindView(R.id.debugText)
-    TextView debugTextView;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
