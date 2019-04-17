@@ -1,4 +1,4 @@
-package ai.rotor.rotorvehicle;
+package ai.rotor.rotorvehicle.ui.monitor;
 
 import android.app.Activity;
 import android.bluetooth.BluetoothDevice;
@@ -18,9 +18,18 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.ParcelUuid;
 import android.util.Log;
+import android.view.View;
 import android.widget.TextView;
 
+import org.w3c.dom.Text;
+
+import ai.rotor.rotorvehicle.R;
+import ai.rotor.rotorvehicle.RotorCtlService;
+import ai.rotor.rotorvehicle.dagger.DaggerRotorComponent;
 import ai.rotor.rotorvehicle.data.Blackbox;
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -32,15 +41,14 @@ import static ai.rotor.rotorvehicle.RotorUtils.ROTOR_TX_RX_CHARACTERISTIC_UUID;
 import static ai.rotor.rotorvehicle.RotorUtils.ROTOR_TX_RX_SERVICE_UUID;
 
 public class MainActivity extends Activity {
-    private static final int REQUEST_ENABLE_BT = 2;
-    private static final int REQUEST_PAIR_BT = 3;
     private static final int DISCOVERABLE_DURATION = 30;
 
     private BluetoothManager mBluetoothManager;
     private Timber.DebugTree debugTree = new Timber.DebugTree();
-    private Blackbox blackbox = new Blackbox();
     Disposable blackboxSubscription;
     private RotorCtlService mRotorCtlService;
+    private Blackbox blackbox;
+    private BlackboxRecyclerAdapter blackboxRecyclerAdapter;
 
     //BLE
     private RotorGattServerCallback mGattServerCallback;
@@ -51,31 +59,52 @@ public class MainActivity extends Activity {
     private BluetoothGattService mGattService;
     private AdvertiseCallback advertiseCallback;
 
-    @BindView(R.id.debugText)
-    TextView debugTextView;
+    @BindView(R.id.LogRecyclerView)
+    RecyclerView logRecyclerView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
+
+        blackbox = DaggerRotorComponent.create().blackbox();
+
+        blackboxRecyclerAdapter = new BlackboxRecyclerAdapter(blackbox);
+        logRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        logRecyclerView.setAdapter(blackboxRecyclerAdapter);
+
         Timber.plant(debugTree);
         Timber.plant(blackbox);
 
-
-        blackboxSubscription = blackbox.getBehaviorSubject()
+        blackboxSubscription = blackbox.getSubject()
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Consumer<String>() {
-            @Override
-            public void accept(String s) {
-                debugTextView.setText(String.format("%s\n%s", debugTextView.getText(), s));
-            }
-        }, new Consumer<Throwable>() {
-            @Override
-            public void accept(Throwable throwable) throws Exception {
-                Timber.d("blackbox error: " + throwable.getMessage());
-            }
-        });
+                    @Override
+                    public void accept(String s) throws Exception {
+                        Log.d("STUDEBUG", "onNext");
+                        blackboxRecyclerAdapter.notifyDataSetChanged();
+                    }
+                }, new Consumer<Throwable>() {
+                    @Override
+                    public void accept(Throwable throwable) throws Exception {
+                        Timber.d(throwable.toString());
+                    }
+                });
+
+//        blackboxSubscription = blackbox.getSubject()
+//                .observeOn(AndroidSchedulers.mainThread())
+//                .subscribe(new Consumer<String>() {
+//            @Override
+//            public void accept(String s) {
+//                debugTextView.setText(String.format("%s\n%s", debugTextView.getText(), s));
+//            }
+//        }, new Consumer<Throwable>() {
+//            @Override
+//            public void accept(Throwable throwable) throws Exception {
+//                Timber.d("blackbox error: " + throwable.getMessage());
+//            }
+//        });
 
         mBluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
         mBluetoothManager.getAdapter().setName("Vehicle");
@@ -118,7 +147,7 @@ public class MainActivity extends Activity {
         mGattServer = mBluetoothManager.openGattServer(this, mGattServerCallback);
         mGattService = new BluetoothGattService(ROTOR_TX_RX_SERVICE_UUID, BluetoothGattService.SERVICE_TYPE_PRIMARY);
         BluetoothGattCharacteristic characteristic = new BluetoothGattCharacteristic(ROTOR_TX_RX_CHARACTERISTIC_UUID, BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE, BluetoothGattCharacteristic.PERMISSION_WRITE);
-        characteristic.setValue(new byte[] {0x00, 0x01, 0x02, 0x03});
+        characteristic.setValue(new byte[]{0x00, 0x01, 0x02, 0x03});
         mGattService.addCharacteristic(characteristic);
         mGattServer.addService(mGattService);
 
@@ -168,7 +197,7 @@ public class MainActivity extends Activity {
         @Override
         public void onConnectionStateChange(BluetoothDevice device, int status, int newState) {
             super.onConnectionStateChange(device, status, newState);
-            Log.d("STUDEBUG", "onConnectionStateChange: " + newState);
+            Timber.d("onConnectionStateChange: %s", newState);
         }
 
 
@@ -185,7 +214,7 @@ public class MainActivity extends Activity {
         public void onCharacteristicWriteRequest(BluetoothDevice device, int requestId, BluetoothGattCharacteristic characteristic, boolean preparedWrite, boolean responseNeeded, int offset, byte[] value) {
             super.onCharacteristicWriteRequest(device, requestId, characteristic, preparedWrite, responseNeeded, offset, value);
             String s = new String(value, 0, value.length);
-            Timber.d("onCharacteristicWriteRequest: " + s);
+            Timber.d("onCharacteristicWriteRequest: %s", s);
             mRotorCtlService.sendCommand(s);
         }
     }

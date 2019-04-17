@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="ai.rotor.rotorvehicle">
     <uses-feature android:name="android.hardware.bluetooth_le" android:required="true"/>
 
@@ -7,10 +8,12 @@
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="com.google.android.things.permission.MANAGE_BLUETOOTH" />
     <uses-permission android:name="com.google.android.things.permission.USE_PERIPHERAL_IO" />
-    <application android:label="@string/app_name">
+    <application android:label="@string/app_name" android:name=".RotorApplication"
+        tools:ignore="GoogleAppIndexingWarning"
+        android:allowBackup="false">
         <uses-library android:name="com.google.android.things" />
 
-        <activity android:name=".MainActivity">
+        <activity android:name=".ui.monitor.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

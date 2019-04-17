@@ -8,7 +8,7 @@ public class RotorCtlService extends Thread {
     private RotorI2cBus mRotorI2cBus;
     private Context mContext;
 
-    enum State {
+    public enum State {
         HOMED,
         MANUAL,
         AUTONOMOUS
@@ -17,7 +17,6 @@ public class RotorCtlService extends Thread {
     public RotorCtlService(Context context) {
         mContext = context;
         mRotorState = State.HOMED;
-
     }
 
     public void run() {
