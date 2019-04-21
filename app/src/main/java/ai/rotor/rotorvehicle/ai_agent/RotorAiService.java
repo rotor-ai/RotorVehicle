@@ -59,6 +59,17 @@ public class RotorAiService implements Runnable {
         this.mImageView = imageView;
         this.mUiHandler = new Handler(mMainContext.getMainLooper());
 
+        if (mMainContext.checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            Timber.d("No permission");
+        }
+
+        mCameraThread = new HandlerThread("CameraBackground");
+        mCameraThread.start();
+        mCameraHandler = new Handler(mCameraThread.getLooper());
+
+        mCamera = RotorCamera.getInstance();
+        mCamera.initializeCamera(mMainContext, mCameraHandler, mOnImageAvailableListener);
+
     }
 
     public void startAutoMode() {
@@ -118,7 +129,12 @@ public class RotorAiService implements Runnable {
             Utils.matToBitmap(imgMat, imgBitmap);
             final Bitmap resizedImgBitmap = imgBitmap.createScaledBitmap(imgBitmap, 150, 150, false);
 
-            mMainContext.getMainLooper()
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    mImageView.setImageBitmap(resizedImgBitmap);
+                }
+            });
 
             jpgImage.close();
         }

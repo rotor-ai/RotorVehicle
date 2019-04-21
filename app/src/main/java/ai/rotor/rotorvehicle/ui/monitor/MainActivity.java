@@ -20,6 +20,7 @@ import android.os.ParcelUuid;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import org.w3c.dom.Text;
@@ -64,6 +65,7 @@ public class MainActivity extends Activity {
 
     @BindView(R.id.LogRecyclerView) RecyclerView logRecyclerView;
     @BindView(R.id.autoBtn) Button mAutoBtn;
+    @BindView(R.id.imageView) ImageView mImageView;
 
 
     @Override
@@ -128,7 +130,7 @@ public class MainActivity extends Activity {
 
         // Ai Agent Setup
         mAutoMode = false;
-        final RotorAiService mRotorAiService = new RotorAiService(this);
+        final RotorAiService mRotorAiService = new RotorAiService(this, mImageView);
         mRotorAiService.run();
 
         mAutoBtn.setOnClickListener(new View.OnClickListener() {
