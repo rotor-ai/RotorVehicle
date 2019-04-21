@@ -10,6 +10,7 @@ import android.media.Image;
 import android.media.ImageReader;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.view.View;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.LoaderCallbackInterface;
@@ -22,7 +23,7 @@ import org.opencv.imgproc.Imgproc;
 
 import java.nio.ByteBuffer;
 
-import ai.rotor.rotorvehicle.MainActivity;
+import ai.rotor.rotorvehicle.ui.monitor.MainActivity;
 import timber.log.Timber;
 
 public class RotorAiService implements Runnable {
@@ -110,6 +111,8 @@ public class RotorAiService implements Runnable {
             final Bitmap imgBitmap = Bitmap.createBitmap(imgMat.cols(), imgMat.rows(), Bitmap.Config.RGB_565);
             Utils.matToBitmap(imgMat, imgBitmap);
             final Bitmap resizedImgBitmap = imgBitmap.createScaledBitmap(imgBitmap, 150, 150, false);
+
+            mMainContext.getMainLooper()
 
             jpgImage.close();
         }

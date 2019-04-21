@@ -19,12 +19,14 @@ import android.os.Bundle;
 import android.os.ParcelUuid;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 
 import org.w3c.dom.Text;
 
 import ai.rotor.rotorvehicle.R;
 import ai.rotor.rotorvehicle.RotorCtlService;
+import ai.rotor.rotorvehicle.ai_agent.RotorAiService;
 import ai.rotor.rotorvehicle.dagger.DaggerRotorComponent;
 import ai.rotor.rotorvehicle.data.Blackbox;
 import androidx.annotation.NonNull;
@@ -49,6 +51,7 @@ public class MainActivity extends Activity {
     private RotorCtlService mRotorCtlService;
     private Blackbox blackbox;
     private BlackboxRecyclerAdapter blackboxRecyclerAdapter;
+    private boolean mAutoMode;
 
     //BLE
     private RotorGattServerCallback mGattServerCallback;
@@ -59,8 +62,9 @@ public class MainActivity extends Activity {
     private BluetoothGattService mGattService;
     private AdvertiseCallback advertiseCallback;
 
-    @BindView(R.id.LogRecyclerView)
-    RecyclerView logRecyclerView;
+    @BindView(R.id.LogRecyclerView) RecyclerView logRecyclerView;
+    @BindView(R.id.autoBtn) Button mAutoBtn;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -121,6 +125,24 @@ public class MainActivity extends Activity {
 
         setupGATTServer();
         beginAdvertisement();
+
+        // Ai Agent Setup
+        mAutoMode = false;
+        final RotorAiService mRotorAiService = new RotorAiService(this);
+        mRotorAiService.run();
+
+        mAutoBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (!mAutoMode) {
+                    mRotorAiService.startAutoMode();
+                    showAuto();
+                } else {
+                    mRotorAiService.stopAutoMode();
+                    showManual();
+                }
+            }
+        });
     }
 
     @Override
@@ -217,6 +239,16 @@ public class MainActivity extends Activity {
             Timber.d("onCharacteristicWriteRequest: %s", s);
             mRotorCtlService.sendCommand(s);
         }
+    }
+
+    private void showAuto() {
+        mAutoBtn.setText("MANUAL");
+        mAutoMode = true;
+    }
+
+    private void showManual() {
+        mAutoBtn.setText("AUTO");
+        mAutoMode = false;
     }
 
 }
