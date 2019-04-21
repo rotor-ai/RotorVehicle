@@ -88,7 +88,6 @@ public class MainActivity extends Activity {
                 .subscribe(new Consumer<String>() {
                     @Override
                     public void accept(String s) throws Exception {
-                        Log.d("STUDEBUG", "onNext");
                         blackboxRecyclerAdapter.notifyDataSetChanged();
                     }
                 }, new Consumer<Throwable>() {

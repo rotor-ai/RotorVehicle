@@ -61,6 +61,7 @@ public class RotorCamera {
 
         // Open the camera resource
         try {
+            Timber.d("Attempting to open the camera");
             manager.openCamera(id, mStateCallback, backgroundHandler);
         } catch (CameraAccessException e) {
             Timber.d("Camera access exception");
@@ -96,6 +97,7 @@ public class RotorCamera {
     };
 
     public void startCapturing() {
+        Timber.d("Starting camera capture session");
 
         mStopCapture = false;
 
@@ -139,7 +141,7 @@ public class RotorCamera {
             final CaptureRequest.Builder captureBuilder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
             captureBuilder.addTarget(mImageReader.getSurface());
             captureBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON);
-            Timber.d("Session initialized");
+            Timber.d("Capture session initialized");
             mCaptureSession.setRepeatingRequest(captureBuilder.build(), mCaptureCallback, null);
         } catch (CameraAccessException e) {
             e.printStackTrace();
@@ -156,17 +158,20 @@ public class RotorCamera {
         @Override
         public void onCaptureCompleted(CameraCaptureSession session, CaptureRequest request, TotalCaptureResult result) {
             super.onCaptureCompleted(session, request, result);
-            if (mStopCapture && mCaptureSession != null) {
-                mCaptureSession.close();
-                mCaptureSession = null;
 
-                Timber.d("Capture session closed");
-            }
         }
     };
 
     public void stopCapturing() {
+        Timber.d("Stopping camera capture session");
         mStopCapture = true;
+
+        if (mStopCapture && mCaptureSession != null) {
+            mCaptureSession.close();
+            mCaptureSession = null;
+
+            Timber.d("Capture session closed");
+        }
     }
 
     public void shutDown() {

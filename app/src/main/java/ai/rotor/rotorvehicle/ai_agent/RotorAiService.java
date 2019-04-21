@@ -53,6 +53,9 @@ public class RotorAiService implements Runnable {
         }
     };
 
+    // @Stuart, I'm currently passing in an ImageView for display purposes, because
+    // I need to use it in a runnable declared in this class. There might be a better way
+    // to do this...
     public RotorAiService(Context context, ImageView imageView) {
         Timber.d("Creating RotorAiService");
         this.mMainContext = context;
@@ -63,13 +66,22 @@ public class RotorAiService implements Runnable {
             Timber.d("No permission");
         }
 
+        // Load OpenCV
+        if (!OpenCVLoader.initDebug()) {
+            Timber.d("Internal OpenCV library not found. Using OpenCV Manager for initialization");
+            OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_0_0, mMainContext, mLoaderCallback);
+        } else {
+            Timber.d("OpenCV library found inside package. Using it!");
+            mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
+        }
+
+        // Create handler threads
         mCameraThread = new HandlerThread("CameraBackground");
         mCameraThread.start();
         mCameraHandler = new Handler(mCameraThread.getLooper());
 
+        // Instantiate RotorCamera object
         mCamera = RotorCamera.getInstance();
-        mCamera.initializeCamera(mMainContext, mCameraHandler, mOnImageAvailableListener);
-
     }
 
     public void startAutoMode() {
@@ -91,20 +103,8 @@ public class RotorAiService implements Runnable {
             Timber.d("No permission");
         }
 
-        mCameraThread = new HandlerThread("CameraBackground");
-        mCameraThread.start();
-        mCameraHandler = new Handler(mCameraThread.getLooper());
-
-        mCamera = RotorCamera.getInstance();
+        // Start RotorCamera session
         mCamera.initializeCamera(mMainContext, mCameraHandler, mOnImageAvailableListener);
-
-        if (!OpenCVLoader.initDebug()) {
-            Timber.d("Internal OpenCV library not found. Using OpenCV Manager for initialization");
-            OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_0_0, mMainContext, mLoaderCallback);
-        } else {
-            Timber.d("OpenCV library found inside package. Using it!");
-            mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
-        }
 
     }
 
@@ -122,7 +122,7 @@ public class RotorAiService implements Runnable {
             Mat imgMat = Imgcodecs.imdecode(new MatOfByte(bytes), Imgcodecs.IMREAD_UNCHANGED);
 
             // Image manipulation
-//            Imgproc.cvtColor(imgMat, imgMat, Imgproc.COLOR_RGB2GRAY);
+            Imgproc.cvtColor(imgMat, imgMat, Imgproc.COLOR_RGB2GRAY);
 
             // Convert to bitmap
             final Bitmap imgBitmap = Bitmap.createBitmap(imgMat.cols(), imgMat.rows(), Bitmap.Config.RGB_565);
