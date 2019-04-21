@@ -84,6 +84,8 @@ public class RotorAiService implements Runnable {
         mRotorCtlService.setState(RotorCtlService.State.AUTONOMOUS);
 
         mCamera.startCapturing();
+
+        mRotorCtlService.sendCommand("N000 R050");
     }
 
     public void stopAutoMode() {
