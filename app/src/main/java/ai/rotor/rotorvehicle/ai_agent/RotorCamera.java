@@ -25,8 +25,6 @@ public class RotorCamera {
 
     private ImageReader mImageReader;
 
-    private boolean mStopCapture;
-
     private static class InstanceHolder {
         private static RotorCamera mCamera = new RotorCamera();
     }
@@ -99,8 +97,6 @@ public class RotorCamera {
     public void startCapturing() {
         Timber.d("Starting camera capture session");
 
-        mStopCapture = false;
-
         if (mCameraDevice == null) {
             Timber.d("Cannot take picture, camera not initialized");
             return;
@@ -164,9 +160,8 @@ public class RotorCamera {
 
     public void stopCapturing() {
         Timber.d("Stopping camera capture session");
-        mStopCapture = true;
 
-        if (mStopCapture && mCaptureSession != null) {
+        if (mCaptureSession != null) {
             mCaptureSession.close();
             mCaptureSession = null;
 

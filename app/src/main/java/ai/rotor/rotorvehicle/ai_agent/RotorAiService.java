@@ -129,6 +129,7 @@ public class RotorAiService implements Runnable {
             Utils.matToBitmap(imgMat, imgBitmap);
             final Bitmap resizedImgBitmap = imgBitmap.createScaledBitmap(imgBitmap, 150, 150, false);
 
+            // Display the image on the imageView
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
