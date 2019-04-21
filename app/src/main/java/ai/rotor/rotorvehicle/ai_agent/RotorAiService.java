@@ -21,6 +21,8 @@ import org.opencv.imgproc.Imgproc;
 
 import java.nio.ByteBuffer;
 
+import ai.rotor.rotorvehicle.rotor_ctl.RotorCtlService;
+import ai.rotor.rotorvehicle.ui.monitor.MainActivity;
 import timber.log.Timber;
 
 public class RotorAiService implements Runnable {
@@ -30,6 +32,7 @@ public class RotorAiService implements Runnable {
     private ImageView mImageView;
     private HandlerThread mCameraThread;
     private Context mMainContext;
+    private RotorCtlService mRotorCtlService;
 
     private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this.getMainContext()) {
         @Override
@@ -51,6 +54,7 @@ public class RotorAiService implements Runnable {
         this.mMainContext = context;
         this.mImageView = imageView;
         this.mUiHandler = new Handler(mMainContext.getMainLooper());
+        this.mRotorCtlService = rotorCtlService;
 
         if (mMainContext.checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
             Timber.d("Unable to use camera. Permission not granted.");
@@ -75,10 +79,18 @@ public class RotorAiService implements Runnable {
     }
 
     public void startAutoMode() {
+
+        Timber.d("Starting autonomous mode");
+        mRotorCtlService.setState(RotorCtlService.State.AUTONOMOUS);
+
         mCamera.startCapturing();
     }
 
     public void stopAutoMode() {
+
+        Timber.d("Stopping autonomous mode");
+        mRotorCtlService.setState(RotorCtlService.State.HOMED);
+
         mCamera.stopCapturing();
     }
 

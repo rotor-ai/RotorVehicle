@@ -1,12 +1,13 @@
-package ai.rotor.rotorvehicle;
+package ai.rotor.rotorvehicle.rotor_ctl;
 
 import android.content.Context;
 
-public class RotorCtlService extends Thread {
-    private final static String TAG = "RotorCTLService";
+import ai.rotor.rotorvehicle.RotorUtils;
+import timber.log.Timber;
+
+public class RotorCtlService implements Runnable {
     private State mRotorState;
     private RotorI2cBus mRotorI2cBus;
-    private Context mContext;
 
     public enum State {
         HOMED,
@@ -14,8 +15,8 @@ public class RotorCtlService extends Thread {
         AUTONOMOUS
     }
 
-    public RotorCtlService(Context context) {
-        mContext = context;
+    public RotorCtlService() {
+        Timber.d("Creating new RotorCtlService");
         mRotorState = State.HOMED;
     }
 
@@ -30,6 +31,11 @@ public class RotorCtlService extends Thread {
 
     public void setState(State stateChangeRequest) throws IllegalArgumentException {
 
+        // If setting to home, send home command
+        if (stateChangeRequest == State.HOMED) {
+            Timber.d("Homing vehicle");
+            this.sendCommand(RotorUtils.HOMED_CMD);
+        }
 
         if (mRotorState == State.MANUAL && stateChangeRequest == State.AUTONOMOUS) {
             throw new IllegalArgumentException("Cannot move directly to autonomous mode from manual");
@@ -42,9 +48,17 @@ public class RotorCtlService extends Thread {
         if (mRotorState != stateChangeRequest) {
             mRotorState = stateChangeRequest;
         }
+
+
     }
 
     public void sendCommand(String cmd) {
+
+        if (mRotorState == State.HOMED) {
+            throw new IllegalStateException("Cannot send a command while Rotor is homed.");
+        }
+
+        Timber.d("Writing command to Arduino: %s", cmd);
         mRotorI2cBus.write(RotorUtils.ARDUINO_ADDRESS, cmd);
     }
 }

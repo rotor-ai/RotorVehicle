@@ -25,7 +25,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import ai.rotor.rotorvehicle.R;
-import ai.rotor.rotorvehicle.RotorCtlService;
+import ai.rotor.rotorvehicle.rotor_ctl.RotorCtlService;
 import ai.rotor.rotorvehicle.ai_agent.RotorAiService;
 import ai.rotor.rotorvehicle.dagger.DaggerRotorComponent;
 import ai.rotor.rotorvehicle.data.Blackbox;
@@ -117,7 +117,7 @@ public class MainActivity extends Activity {
         Timber.d("supports multi advertisement: %s", doesSupportMultiAdvertisement());
 
         // Start the Rotor control service thread
-        mRotorCtlService = new RotorCtlService(this);
+        mRotorCtlService = new RotorCtlService();
         mRotorCtlService.run();
 
         setupGATTServer();
@@ -125,7 +125,7 @@ public class MainActivity extends Activity {
 
         // Ai Agent Setup
         mAutoMode = false;
-        final RotorAiService mRotorAiService = new RotorAiService(this, mImageView);
+        final RotorAiService mRotorAiService = new RotorAiService(this, mImageView, mRotorCtlService);
         mRotorAiService.run();
 
         mAutoBtn.setOnClickListener(new View.OnClickListener() {
