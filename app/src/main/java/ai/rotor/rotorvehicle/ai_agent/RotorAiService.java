@@ -1,16 +1,13 @@
 package ai.rotor.rotorvehicle.ai_agent;
 
 import android.Manifest;
-import android.app.Activity;
 import android.content.Context;
-import android.content.ContextWrapper;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.media.Image;
 import android.media.ImageReader;
 import android.os.Handler;
 import android.os.HandlerThread;
-import android.view.View;
 import android.widget.ImageView;
 
 import org.opencv.android.BaseLoaderCallback;
@@ -24,7 +21,6 @@ import org.opencv.imgproc.Imgproc;
 
 import java.nio.ByteBuffer;
 
-import ai.rotor.rotorvehicle.ui.monitor.MainActivity;
 import timber.log.Timber;
 
 public class RotorAiService implements Runnable {
@@ -43,19 +39,13 @@ public class RotorAiService implements Runnable {
                 {
                     Timber.d("OpenCV loaded successfully");
                 } break;
-                default:
-                {
-
+                default: {
                     super.onManagerConnected(status);
-
                 } break;
             }
         }
     };
 
-    // @Stuart, I'm currently passing in an ImageView for display purposes, because
-    // I need to use it in a runnable declared in this class. There might be a better way
-    // to do this...
     public RotorAiService(Context context, ImageView imageView) {
         Timber.d("Creating RotorAiService");
         this.mMainContext = context;
@@ -63,7 +53,7 @@ public class RotorAiService implements Runnable {
         this.mUiHandler = new Handler(mMainContext.getMainLooper());
 
         if (mMainContext.checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-            Timber.d("No permission");
+            Timber.d("Unable to use camera. Permission not granted.");
         }
 
         // Load OpenCV

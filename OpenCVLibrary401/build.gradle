@@ -6,7 +6,7 @@ android {
 
     defaultConfig {
         minSdkVersion 21
-        targetSdkVersion 26
+        targetSdkVersion 28
     }
 
     buildTypes {
@@ -25,7 +25,7 @@ android {
             jniLibs.srcDirs = ['../../jni']
             java.srcDirs = ['src']  // TODO Use original files instead of copied into build directory
             aidl.srcDirs = ['src']
-            res.srcDirs = ['/Users/Robbie/AndroidStudioProjects/RotorVehicle/OpenCVLibrary401/res']
+            res.srcDirs = ['./res']
             manifest.srcFile 'AndroidManifest.xml'
         }
     }

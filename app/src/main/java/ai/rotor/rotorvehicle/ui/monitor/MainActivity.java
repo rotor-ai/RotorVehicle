@@ -243,12 +243,14 @@ public class MainActivity extends Activity {
     }
 
     private void showAuto() {
-        mAutoBtn.setText("MANUAL");
+        String homedText = getString(R.string.ui_home);
+        mAutoBtn.setText(homedText);
         mAutoMode = true;
     }
 
     private void showManual() {
-        mAutoBtn.setText("AUTO");
+        String autoText = getString(R.string.ui_auto);
+        mAutoBtn.setText(autoText);
         mAutoMode = false;
     }
 

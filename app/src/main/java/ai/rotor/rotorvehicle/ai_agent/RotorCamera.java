@@ -2,13 +2,7 @@ package ai.rotor.rotorvehicle.ai_agent;
 
 import android.content.Context;
 import android.graphics.ImageFormat;
-import android.hardware.camera2.CameraAccessException;
-import android.hardware.camera2.CameraCaptureSession;
-import android.hardware.camera2.CameraDevice;
-import android.hardware.camera2.CameraManager;
-import android.hardware.camera2.CaptureRequest;
-import android.hardware.camera2.CaptureResult;
-import android.hardware.camera2.TotalCaptureResult;
+import android.hardware.camera2.*;
 import android.media.ImageReader;
 import android.os.Handler;
 
@@ -51,7 +45,7 @@ public class RotorCamera {
         }
 
         String id = camIds[0];
-        Timber.d("Using camera id: " + id);
+        Timber.d("Using camera id: %s", id);
 
         // Initialize the image processor
         mImageReader = ImageReader.newInstance(IMAGE_WIDTH, IMAGE_HEIGHT, ImageFormat.JPEG, MAX_IMAGES);
@@ -62,8 +56,7 @@ public class RotorCamera {
             Timber.d("Attempting to open the camera");
             manager.openCamera(id, mStateCallback, backgroundHandler);
         } catch (CameraAccessException e) {
-            Timber.d("Camera access exception");
-            e.printStackTrace();
+            Timber.d("Camera access exception due to: %s", e.toString());
         }
     }
 
@@ -82,7 +75,7 @@ public class RotorCamera {
 
         @Override
         public void onError(CameraDevice camera, int error) {
-            Timber.d("Error using camera device, closing");
+            Timber.d("Error using camera device, closing. Error code: %s", error);
             camera.close();
         }
 
@@ -108,8 +101,7 @@ public class RotorCamera {
                     mSessionCallback,
                     null);
         } catch (CameraAccessException e) {
-            Timber.d("access exception while preparing pic");
-            e.printStackTrace();
+            Timber.d("access exception while preparing pic due to: %s", e.toString());
         }
     }
 
@@ -140,7 +132,7 @@ public class RotorCamera {
             Timber.d("Capture session initialized");
             mCaptureSession.setRepeatingRequest(captureBuilder.build(), mCaptureCallback, null);
         } catch (CameraAccessException e) {
-            e.printStackTrace();
+            Timber.d("Camera access exception: %s", e.toString());
         }
     }
 
