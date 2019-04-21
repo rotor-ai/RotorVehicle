@@ -44,6 +44,6 @@ class Blackbox @Inject constructor(val clock: Clock) : Timber.Tree() {
     }
 
     companion object {
-        const val startupMsg = "==========BEGINNING OF BLACKBOX LOG=========="
+        const val startupMsg = "==BEGINNING OF BLACKBOX LOG=="
     }
 }

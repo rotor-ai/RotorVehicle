@@ -122,7 +122,7 @@ public class RotorAiService implements Runnable {
             Mat imgMat = Imgcodecs.imdecode(new MatOfByte(bytes), Imgcodecs.IMREAD_UNCHANGED);
 
             // Image manipulation
-            Imgproc.cvtColor(imgMat, imgMat, Imgproc.COLOR_RGB2GRAY);
+//            Imgproc.cvtColor(imgMat, imgMat, Imgproc.COLOR_RGB2GRAY);
 
             // Convert to bitmap
             final Bitmap imgBitmap = Bitmap.createBitmap(imgMat.cols(), imgMat.rows(), Bitmap.Config.RGB_565);
