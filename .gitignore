@@ -19,3 +19,6 @@
 **/android/gradlew.bat
 **/android/local.properties
 **/android/**/GeneratedPluginRegistrant.java
+
+# OpenCV Related
+/OpenCVLibrary401/build
