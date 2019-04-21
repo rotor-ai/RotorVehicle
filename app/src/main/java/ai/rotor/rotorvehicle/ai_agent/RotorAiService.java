@@ -11,6 +11,7 @@ import android.media.ImageReader;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.view.View;
+import android.widget.ImageView;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.LoaderCallbackInterface;
@@ -29,6 +30,8 @@ import timber.log.Timber;
 public class RotorAiService implements Runnable {
     private RotorCamera mCamera;
     private Handler mCameraHandler;
+    private Handler mUiHandler;
+    private ImageView mImageView;
     private HandlerThread mCameraThread;
     private Context mMainContext;
 
@@ -50,9 +53,12 @@ public class RotorAiService implements Runnable {
         }
     };
 
-    public RotorAiService(Context context) {
+    public RotorAiService(Context context, ImageView imageView) {
         Timber.d("Creating RotorAiService");
         this.mMainContext = context;
+        this.mImageView = imageView;
+        this.mUiHandler = new Handler(mMainContext.getMainLooper());
+
     }
 
     public void startAutoMode() {
@@ -117,4 +123,8 @@ public class RotorAiService implements Runnable {
             jpgImage.close();
         }
     };
+
+    private void runOnUiThread(Runnable r) {
+        mUiHandler.post(r);
+    }
 }
