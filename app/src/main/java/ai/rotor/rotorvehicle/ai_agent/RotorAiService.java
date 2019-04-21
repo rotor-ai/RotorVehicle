@@ -24,6 +24,7 @@ import org.opencv.imgproc.Imgproc;
 
 import java.nio.ByteBuffer;
 
+import ai.rotor.rotorvehicle.rotor_ctl.RotorCtlService;
 import ai.rotor.rotorvehicle.ui.monitor.MainActivity;
 import timber.log.Timber;
 
@@ -34,6 +35,7 @@ public class RotorAiService implements Runnable {
     private ImageView mImageView;
     private HandlerThread mCameraThread;
     private Context mMainContext;
+    private RotorCtlService mRotorCtlService;
 
     private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this.getMainContext()) {
         @Override
@@ -56,11 +58,12 @@ public class RotorAiService implements Runnable {
     // @Stuart, I'm currently passing in an ImageView for display purposes, because
     // I need to use it in a runnable declared in this class. There might be a better way
     // to do this...
-    public RotorAiService(Context context, ImageView imageView) {
+    public RotorAiService(Context context, ImageView imageView, RotorCtlService rotorCtlService) {
         Timber.d("Creating RotorAiService");
         this.mMainContext = context;
         this.mImageView = imageView;
         this.mUiHandler = new Handler(mMainContext.getMainLooper());
+        this.mRotorCtlService = rotorCtlService;
 
         if (mMainContext.checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
             Timber.d("No permission");
@@ -85,10 +88,18 @@ public class RotorAiService implements Runnable {
     }
 
     public void startAutoMode() {
+
+        Timber.d("Starting autonomous mode");
+        mRotorCtlService.setState(RotorCtlService.State.AUTONOMOUS);
+
         mCamera.startCapturing();
     }
 
     public void stopAutoMode() {
+
+        Timber.d("Stopping autonomous mode");
+        mRotorCtlService.setState(RotorCtlService.State.HOMED);
+
         mCamera.stopCapturing();
     }
 
