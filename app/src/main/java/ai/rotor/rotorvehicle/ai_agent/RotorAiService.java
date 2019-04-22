@@ -49,7 +49,7 @@ public class RotorAiService implements Runnable {
         }
     };
 
-    public RotorAiService(Context context, ImageView imageView) {
+    public RotorAiService(Context context, ImageView imageView, RotorCtlService rotorCtlService) {
         Timber.d("Creating RotorAiService");
         this.mMainContext = context;
         this.mImageView = imageView;
