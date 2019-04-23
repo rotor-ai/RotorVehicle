@@ -14,10 +14,14 @@ import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
+import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
+import org.opencv.core.Point;
+import org.opencv.core.Scalar;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
+import org.opencv.imgproc.Moments;
 
 import java.nio.ByteBuffer;
 
@@ -85,7 +89,6 @@ public class RotorAiService implements Runnable {
 
         mCamera.startCapturing();
 
-        mRotorCtlService.sendCommand("N000 R050");
     }
 
     public void stopAutoMode() {
@@ -126,12 +129,48 @@ public class RotorAiService implements Runnable {
             Mat imgMat = Imgcodecs.imdecode(new MatOfByte(bytes), Imgcodecs.IMREAD_UNCHANGED);
 
             // Image manipulation
-            Imgproc.cvtColor(imgMat, imgMat, Imgproc.COLOR_RGB2GRAY);
+            Imgproc.cvtColor(imgMat, imgMat, Imgproc.COLOR_BGR2HSV);
+
+            int hYellowLow = 20;
+            int hYellowHigh = 30;
+            int hBlueLow = 75;
+            int hBlueHigh = 85;
+            int sLow = 100;
+            int sHigh = 255;
+            int vLow = 50;
+            int vHigh = 255;
+
+            Mat yellowMask = new Mat();
+            Mat blueMask = new Mat();
+
+            Core.inRange(imgMat, new Scalar(hBlueLow, sLow, vLow), new Scalar(hBlueHigh, sHigh, vHigh), blueMask);
+            Core.inRange(imgMat, new Scalar(hYellowLow, sLow, vLow), new Scalar(hYellowHigh, sHigh, vHigh), yellowMask);
+
+            Moments blueMoments = Imgproc.moments(blueMask);
+            int xBlue = (int) (blueMoments.get_m10() / blueMoments.get_m00());
+            int yBlue = (int) (blueMoments.get_m01() / blueMoments.get_m00());
+
+            Moments yellowMoments = Imgproc.moments(yellowMask);
+            int xYellow = (int) (yellowMoments.get_m10() / yellowMoments.get_m00());
+            int yYellow = (int) (yellowMoments.get_m01() / yellowMoments.get_m00());
+
+//            Mat filteredHsv = new Mat();
+//            imgMat.copyTo(filteredHsv, mask);
+
+            int width = 80;
+            int height = 80;
+            int thickness = 5;
+
+            Imgproc.rectangle(imgMat, new Point(xBlue - width, yBlue - width), new Point(xBlue + width, yBlue + height), new Scalar(255, 255, 255), thickness);
+            Imgproc.rectangle(imgMat, new Point(xYellow - width, yYellow - width), new Point(xYellow + width, yYellow + height), new Scalar(255, 255, 255), thickness);
+
+            // Convert back to RGB
+            Imgproc.cvtColor(imgMat, imgMat, Imgproc.COLOR_HSV2RGB);
 
             // Convert to bitmap
             final Bitmap imgBitmap = Bitmap.createBitmap(imgMat.cols(), imgMat.rows(), Bitmap.Config.RGB_565);
             Utils.matToBitmap(imgMat, imgBitmap);
-            final Bitmap resizedImgBitmap = imgBitmap.createScaledBitmap(imgBitmap, 150, 150, false);
+            final Bitmap resizedImgBitmap = Bitmap.createScaledBitmap(imgBitmap, 150, 150, false);
 
             // Display the image on the imageView
             runOnUiThread(new Runnable() {
