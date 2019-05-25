@@ -18,18 +18,14 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.ParcelUuid;
 import android.util.Log;
-import android.view.View;
-import android.widget.TextView;
 
-import org.w3c.dom.Text;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import ai.rotor.rotorvehicle.R;
 import ai.rotor.rotorvehicle.RotorCtlService;
 import ai.rotor.rotorvehicle.dagger.DaggerRotorComponent;
 import ai.rotor.rotorvehicle.data.Blackbox;
-import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import io.reactivex.android.schedulers.AndroidSchedulers;

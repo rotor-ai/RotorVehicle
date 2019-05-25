@@ -5,7 +5,6 @@ import android.content.Context;
 public class RotorCtlService extends Thread {
     private final static String TAG = "RotorCTLService";
     private State mRotorState;
-    private RotorI2cBus mRotorI2cBus;
     private Context mContext;
 
     public enum State {
@@ -20,7 +19,8 @@ public class RotorCtlService extends Thread {
     }
 
     public void run() {
-        mRotorI2cBus = new RotorI2cBus();
+        assert true;
+        // TODO: Implement rotorCtl
     }
 
     public State getRotorState() {
@@ -45,6 +45,7 @@ public class RotorCtlService extends Thread {
     }
 
     public void sendCommand(String cmd) {
-        mRotorI2cBus.write(RotorUtils.ARDUINO_ADDRESS, cmd);
+        assert true;
+        // TODO: Implement send over USB
     }
 }
