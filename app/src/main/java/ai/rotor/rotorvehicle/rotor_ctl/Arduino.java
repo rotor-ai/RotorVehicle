@@ -17,7 +17,6 @@ import java.util.HashMap;
 import timber.log.Timber;
 
 public class Arduino implements UsbSerialInterface.UsbReadCallback {
-    private static final String TAG = "Arduino";
     private static final int BAUD_RATE = 9600;
     private static final int ARDUINO_VENDOR_ID = 9025;
     private static final String ACTION_USB_DEVICE_PERMISSION = "com.example.androidusb.USB_PERMISSION";
@@ -34,7 +33,6 @@ public class Arduino implements UsbSerialInterface.UsbReadCallback {
 
 
     public Arduino(Context context) {
-        Timber.d("Creating Arduino communication class");
         this.mContext = context;
         this.mUsbReceiver = new UsbReceiver();
         this.mUsbManager = (UsbManager) context.getSystemService(Context.USB_SERVICE);
@@ -62,7 +60,6 @@ public class Arduino implements UsbSerialInterface.UsbReadCallback {
     }
 
     public void open(UsbDevice device) {
-        Timber.d("Opening arduino");
         PendingIntent permissionIntent = PendingIntent.getBroadcast(mContext, 0, new Intent(ACTION_USB_DEVICE_PERMISSION), 0);
         mUsbManager.requestPermission(device, permissionIntent);
     }
@@ -133,7 +130,6 @@ public class Arduino implements UsbSerialInterface.UsbReadCallback {
                                         mIsOpened = true;
 
                                         if (mListener != null) {
-                                            Timber.d("Calling onArduinoOpened");
                                             mListener.onArduinoOpened();
                                         }
                                     }

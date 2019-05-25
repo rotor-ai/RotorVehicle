@@ -17,7 +17,6 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.ParcelUuid;
-import android.util.Log;
 
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -78,7 +77,6 @@ public class MainActivity extends Activity {
                 .subscribe(new Consumer<String>() {
                     @Override
                     public void accept(String s) throws Exception {
-                        Log.d("STUDEBUG", "onNext");
                         blackboxRecyclerAdapter.notifyDataSetChanged();
                     }
                 }, new Consumer<Throwable>() {
@@ -106,9 +104,7 @@ public class MainActivity extends Activity {
         mBluetoothManager.getAdapter().setName("Vehicle");
 
         Timber.d("onCreate, thread ID: %s", Thread.currentThread().getId());
-        Timber.d("checking for BLE support...");
         Timber.d("supports BLE: %s", getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE));
-        Timber.d("checking for MultiAdvertisement support...");
         Timber.d("supports multi advertisement: %s", doesSupportMultiAdvertisement());
 
         // Start the Rotor control service thread
@@ -128,6 +124,9 @@ public class MainActivity extends Activity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+
+        // Stop control service
+        mRotorCtlService.stop();
 
         //unsubscribe RxJava stuff
         blackboxSubscription.dispose();

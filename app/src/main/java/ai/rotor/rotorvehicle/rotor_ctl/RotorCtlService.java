@@ -6,8 +6,7 @@ import android.os.Handler;
 
 import timber.log.Timber;
 
-public class RotorCtlService extends Thread implements ArduinoListener {
-    private final static String TAG = "RotorCTLService";
+public class RotorCtlService implements ArduinoListener, Runnable {
     private State mRotorState;
     private Context mContext;
     private Arduino mRotorArduino;
@@ -25,6 +24,7 @@ public class RotorCtlService extends Thread implements ArduinoListener {
 
     public void run() {
         mRotorArduino = new Arduino(mContext);
+        mRotorArduino.setArduinoListener(this);
     }
 
     public State getRotorState() {
@@ -55,7 +55,7 @@ public class RotorCtlService extends Thread implements ArduinoListener {
 
     @Override
     public void onArduinoAttached(UsbDevice device) {
-        Timber.d( "Arduino attached...");
+        Timber.d("Initializing Arduino communication");
         mRotorArduino.open(device);
     }
 
@@ -66,7 +66,7 @@ public class RotorCtlService extends Thread implements ArduinoListener {
 
     @Override
     public void onArduinoOpened() {
-        Timber.d("Arduino opened");
+        Timber.d("Arduino communication initialized");
     }
 
     @Override
@@ -83,5 +83,10 @@ public class RotorCtlService extends Thread implements ArduinoListener {
     @Override
     public void onArduinoMessage(String message) {
         Timber.d("Received message: %s", message);
+    }
+
+    public void stop() {
+        mRotorArduino.unSetArduinoListener();
+        mRotorArduino.close();
     }
 }
