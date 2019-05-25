@@ -11,4 +11,5 @@ public class RotorUtils {
     public static final String ACTION_DISCONNECTED = "disconnected";
     public static final String ACTION_MESSAGE_RECEIVED = "messageReceived";
     public static final String EXTRA_CMD = "cmd";
+    public static final String HOMED_CMD = "N000 N000";
 }

@@ -17,12 +17,16 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.ParcelUuid;
+import android.view.View;
+import android.widget.Button;
+import android.widget.ImageView;
 
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import ai.rotor.rotorvehicle.R;
 import ai.rotor.rotorvehicle.rotor_ctl.RotorCtlService;
+import ai.rotor.rotorvehicle.ai_agent.RotorAiService;
 import ai.rotor.rotorvehicle.dagger.DaggerRotorComponent;
 import ai.rotor.rotorvehicle.data.Blackbox;
 import butterknife.BindView;
@@ -44,6 +48,7 @@ public class MainActivity extends Activity {
     private RotorCtlService mRotorCtlService;
     private Blackbox blackbox;
     private BlackboxRecyclerAdapter blackboxRecyclerAdapter;
+    private boolean mAutoMode;
 
     //BLE
     private RotorGattServerCallback mGattServerCallback;
@@ -54,8 +59,10 @@ public class MainActivity extends Activity {
     private BluetoothGattService mGattService;
     private AdvertiseCallback advertiseCallback;
 
-    @BindView(R.id.LogRecyclerView)
-    RecyclerView logRecyclerView;
+    @BindView(R.id.LogRecyclerView) RecyclerView logRecyclerView;
+    @BindView(R.id.autoBtn) Button mAutoBtn;
+    @BindView(R.id.imageView) ImageView mImageView;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -108,11 +115,29 @@ public class MainActivity extends Activity {
         Timber.d("supports multi advertisement: %s", doesSupportMultiAdvertisement());
 
         // Start the Rotor control service thread
-        mRotorCtlService = new RotorCtlService(this);
+        mRotorCtlService = new RotorCtlService();
         mRotorCtlService.run();
 
         setupGATTServer();
         beginAdvertisement();
+
+        // Ai Agent Setup
+        mAutoMode = false;
+        final RotorAiService mRotorAiService = new RotorAiService(this, mImageView, mRotorCtlService);
+        mRotorAiService.run();
+
+        mAutoBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (!mAutoMode) {
+                    mRotorAiService.startAutoMode();
+                    showAuto();
+                } else {
+                    mRotorAiService.stopAutoMode();
+                    showManual();
+                }
+            }
+        });
     }
 
     @Override
@@ -212,6 +237,18 @@ public class MainActivity extends Activity {
             Timber.d("onCharacteristicWriteRequest: %s", s);
             mRotorCtlService.sendCommand(s);
         }
+    }
+
+    private void showAuto() {
+        String homedText = getString(R.string.ui_home);
+        mAutoBtn.setText(homedText);
+        mAutoMode = true;
+    }
+
+    private void showManual() {
+        String autoText = getString(R.string.ui_auto);
+        mAutoBtn.setText(autoText);
+        mAutoMode = false;
     }
 
 }
