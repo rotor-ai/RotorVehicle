@@ -23,7 +23,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import ai.rotor.rotorvehicle.R;
-import ai.rotor.rotorvehicle.RotorCtlService;
+import ai.rotor.rotorvehicle.rotor_ctl.RotorCtlService;
 import ai.rotor.rotorvehicle.dagger.DaggerRotorComponent;
 import ai.rotor.rotorvehicle.data.Blackbox;
 import butterknife.BindView;

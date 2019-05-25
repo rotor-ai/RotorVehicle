@@ -1,4 +1,4 @@
-package ai.rotor.rotorvehicle;
+package ai.rotor.rotorvehicle.rotor_ctl;
 
 import android.content.Context;
 
