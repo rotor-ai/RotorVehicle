@@ -34,6 +34,7 @@ public class Arduino implements UsbSerialInterface.UsbReadCallback {
 
 
     public Arduino(Context context) {
+        Timber.d("Creating Arduino communication class");
         this.mContext = context;
         this.mUsbReceiver = new UsbReceiver();
         this.mUsbManager = (UsbManager) context.getSystemService(Context.USB_SERVICE);

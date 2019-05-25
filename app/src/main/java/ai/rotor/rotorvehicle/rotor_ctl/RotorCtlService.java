@@ -1,11 +1,16 @@
 package ai.rotor.rotorvehicle.rotor_ctl;
 
 import android.content.Context;
+import android.hardware.usb.UsbDevice;
+import android.os.Handler;
 
-public class RotorCtlService extends Thread {
+import timber.log.Timber;
+
+public class RotorCtlService extends Thread implements ArduinoListener {
     private final static String TAG = "RotorCTLService";
     private State mRotorState;
     private Context mContext;
+    private Arduino mRotorArduino;
 
     public enum State {
         HOMED,
@@ -19,8 +24,7 @@ public class RotorCtlService extends Thread {
     }
 
     public void run() {
-        assert true;
-        // TODO: Implement rotorCtl
+        mRotorArduino = new Arduino(mContext);
     }
 
     public State getRotorState() {
@@ -45,7 +49,39 @@ public class RotorCtlService extends Thread {
     }
 
     public void sendCommand(String cmd) {
-        assert true;
-        // TODO: Implement send over USB
+        Timber.d("Sending command: %s", cmd);
+        mRotorArduino.send(cmd.getBytes());
+    }
+
+    @Override
+    public void onArduinoAttached(UsbDevice device) {
+        Timber.d( "Arduino attached...");
+        mRotorArduino.open(device);
+    }
+
+    @Override
+    public void onArduinoDetached() {
+        Timber.d("Arduino detached");
+    }
+
+    @Override
+    public void onArduinoOpened() {
+        Timber.d("Arduino opened");
+    }
+
+    @Override
+    public void onUsbPermissionDenied() {
+        Timber.d( "Permission denied...");
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                mRotorArduino.reOpen();
+            }
+        }, 3000);
+    }
+
+    @Override
+    public void onArduinoMessage(String message) {
+        Timber.d("Received message: %s", message);
     }
 }
