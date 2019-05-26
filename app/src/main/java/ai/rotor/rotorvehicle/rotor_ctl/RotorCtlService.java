@@ -49,7 +49,7 @@ public class RotorCtlService implements ArduinoListener, Runnable {
     }
 
     public void sendCommand(String cmd) {
-        Timber.d("Sending command: %s", cmd);
+        Timber.d("Commanding Arduino: %s", cmd);
         mRotorArduino.send(cmd.getBytes());
     }
 

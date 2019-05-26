@@ -81,7 +81,6 @@ public class Arduino implements UsbSerialInterface.UsbReadCallback {
     }
 
     public void send(byte[] bytes) {
-        Timber.d("Sending message");
         if (mSerialPort != null) {
             mSerialPort.write(bytes);
         }

@@ -236,7 +236,7 @@ public class MainActivity extends Activity {
         public void onCharacteristicWriteRequest(BluetoothDevice device, int requestId, BluetoothGattCharacteristic characteristic, boolean preparedWrite, boolean responseNeeded, int offset, byte[] value) {
             super.onCharacteristicWriteRequest(device, requestId, characteristic, preparedWrite, responseNeeded, offset, value);
             String s = new String(value, 0, value.length);
-            Timber.d("onCharacteristicWriteRequest: %s", s);
+            Timber.d("Command received: %s", s);
             mRotorCtlService.sendCommand(s);
         }
     }
