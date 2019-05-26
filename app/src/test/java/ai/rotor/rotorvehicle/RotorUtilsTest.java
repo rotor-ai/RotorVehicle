@@ -23,10 +23,4 @@ public class RotorUtilsTest {
         UUID TestUUID = RotorUtils.ROTOR_TX_RX_SERVICE_UUID;
         assertEquals(TestUUID, correctUUID);
     }
-
-    @Test
-    public void isArduinoAddressCorrect() {
-        int testAddress = RotorUtils.ARDUINO_ADDRESS;
-        assertEquals(testAddress, correctAddress);
-    }
 }

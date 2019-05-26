@@ -4,30 +4,20 @@ import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
 import android.media.Image;
 import android.media.ImageReader;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.widget.ImageView;
 
-import org.opencv.android.BaseLoaderCallback;
-import org.opencv.android.LoaderCallbackInterface;
-import org.opencv.android.OpenCVLoader;
-import org.opencv.android.Utils;
-import org.opencv.core.Core;
-import org.opencv.core.Mat;
-import org.opencv.core.MatOfByte;
-import org.opencv.core.Point;
-import org.opencv.core.Scalar;
-import org.opencv.imgcodecs.Imgcodecs;
-import org.opencv.imgproc.Imgproc;
-import org.opencv.imgproc.Moments;
-
 import java.nio.ByteBuffer;
 
 import ai.rotor.rotorvehicle.rotor_ctl.RotorCtlService;
-import ai.rotor.rotorvehicle.ui.monitor.MainActivity;
 import timber.log.Timber;
+
+import static ai.rotor.rotorvehicle.RotorUtils.*;
 
 public class RotorAiService implements Runnable {
     private RotorCamera mCamera;
@@ -37,21 +27,7 @@ public class RotorAiService implements Runnable {
     private HandlerThread mCameraThread;
     private Context mMainContext;
     private RotorCtlService mRotorCtlService;
-
-    private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this.getMainContext()) {
-        @Override
-        public void onManagerConnected(int status) {
-            switch (status) {
-                case LoaderCallbackInterface.SUCCESS:
-                {
-                    Timber.d("OpenCV loaded successfully");
-                } break;
-                default: {
-                    super.onManagerConnected(status);
-                } break;
-            }
-        }
-    };
+    private boolean mIsAuto;
 
     public RotorAiService(Context context, ImageView imageView, RotorCtlService rotorCtlService) {
         Timber.d("Creating RotorAiService");
@@ -59,18 +35,10 @@ public class RotorAiService implements Runnable {
         this.mImageView = imageView;
         this.mUiHandler = new Handler(mMainContext.getMainLooper());
         this.mRotorCtlService = rotorCtlService;
+        this.mIsAuto = false;
 
         if (mMainContext.checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
             Timber.d("Unable to use camera. Permission not granted.");
-        }
-
-        // Load OpenCV
-        if (!OpenCVLoader.initDebug()) {
-            Timber.d("Internal OpenCV library not found. Using OpenCV Manager for initialization");
-            OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_0_0, mMainContext, mLoaderCallback);
-        } else {
-            Timber.d("OpenCV library found inside package. Using it!");
-            mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
         }
 
         // Create handler threads
@@ -89,6 +57,8 @@ public class RotorAiService implements Runnable {
 
         mCamera.startCapturing();
 
+        mIsAuto = true;
+
     }
 
     public void stopAutoMode() {
@@ -97,6 +67,13 @@ public class RotorAiService implements Runnable {
         mRotorCtlService.setState(RotorCtlService.State.HOMED);
 
         mCamera.stopCapturing();
+
+        mIsAuto = false;
+    }
+
+
+    public boolean isAutoMode() {
+        return mIsAuto;
     }
 
 
@@ -120,63 +97,23 @@ public class RotorAiService implements Runnable {
         @Override
         public void onImageAvailable(ImageReader reader) {
             Image jpgImage = reader.acquireLatestImage();
-
             ByteBuffer imgBuffer = jpgImage.getPlanes()[0].getBuffer();
             byte[] bytes = new byte[imgBuffer.remaining()];
             imgBuffer.get(bytes);
 
-            // Byte array to Mat
-            Mat imgMat = Imgcodecs.imdecode(new MatOfByte(bytes), Imgcodecs.IMREAD_UNCHANGED);
+            Bitmap imgBitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length, null);
 
-            // Image manipulation
-            Imgproc.cvtColor(imgMat, imgMat, Imgproc.COLOR_BGR2HSV);
+            Matrix matrix = new Matrix();
+            matrix.postRotate(90);
 
-            int hYellowLow = 20;
-            int hYellowHigh = 30;
-            int hBlueLow = 75;
-            int hBlueHigh = 85;
-            int sLow = 100;
-            int sHigh = 255;
-            int vLow = 50;
-            int vHigh = 255;
-
-            Mat yellowMask = new Mat();
-            Mat blueMask = new Mat();
-
-            Core.inRange(imgMat, new Scalar(hBlueLow, sLow, vLow), new Scalar(hBlueHigh, sHigh, vHigh), blueMask);
-            Core.inRange(imgMat, new Scalar(hYellowLow, sLow, vLow), new Scalar(hYellowHigh, sHigh, vHigh), yellowMask);
-
-            Moments blueMoments = Imgproc.moments(blueMask);
-            int xBlue = (int) (blueMoments.get_m10() / blueMoments.get_m00());
-            int yBlue = (int) (blueMoments.get_m01() / blueMoments.get_m00());
-
-            Moments yellowMoments = Imgproc.moments(yellowMask);
-            int xYellow = (int) (yellowMoments.get_m10() / yellowMoments.get_m00());
-            int yYellow = (int) (yellowMoments.get_m01() / yellowMoments.get_m00());
-
-//            Mat filteredHsv = new Mat();
-//            imgMat.copyTo(filteredHsv, mask);
-
-            int width = 80;
-            int height = 80;
-            int thickness = 5;
-
-            Imgproc.rectangle(imgMat, new Point(xBlue - width, yBlue - width), new Point(xBlue + width, yBlue + height), new Scalar(255, 255, 255), thickness);
-            Imgproc.rectangle(imgMat, new Point(xYellow - width, yYellow - width), new Point(xYellow + width, yYellow + height), new Scalar(255, 255, 255), thickness);
-
-            // Convert back to RGB
-            Imgproc.cvtColor(imgMat, imgMat, Imgproc.COLOR_HSV2RGB);
-
-            // Convert to bitmap
-            final Bitmap imgBitmap = Bitmap.createBitmap(imgMat.cols(), imgMat.rows(), Bitmap.Config.RGB_565);
-            Utils.matToBitmap(imgMat, imgBitmap);
-            final Bitmap resizedImgBitmap = Bitmap.createScaledBitmap(imgBitmap, 150, 150, false);
+            Bitmap resizedBitmap = Bitmap.createScaledBitmap(imgBitmap, IMAGE_HEIGHT, IMAGE_WIDTH, false);
+            final Bitmap rotatedBitmap = Bitmap.createBitmap(resizedBitmap, 0, 0, resizedBitmap.getWidth(), resizedBitmap.getHeight(), matrix, true);
 
             // Display the image on the imageView
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    mImageView.setImageBitmap(resizedImgBitmap);
+                    mImageView.setImageBitmap(rotatedBitmap);
                 }
             });
 
@@ -186,5 +123,9 @@ public class RotorAiService implements Runnable {
 
     private void runOnUiThread(Runnable r) {
         mUiHandler.post(r);
+    }
+
+    public void stop() {
+        mCamera.shutDown();
     }
 }

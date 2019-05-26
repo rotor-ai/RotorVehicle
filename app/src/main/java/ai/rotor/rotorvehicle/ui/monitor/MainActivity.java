@@ -46,9 +46,9 @@ public class MainActivity extends Activity {
     private Timber.DebugTree debugTree = new Timber.DebugTree();
     Disposable blackboxSubscription;
     private RotorCtlService mRotorCtlService;
+    private RotorAiService mRotorAiService;
     private Blackbox blackbox;
     private BlackboxRecyclerAdapter blackboxRecyclerAdapter;
-    private boolean mAutoMode;
 
     //BLE
     private RotorGattServerCallback mGattServerCallback;
@@ -115,21 +115,20 @@ public class MainActivity extends Activity {
         Timber.d("supports multi advertisement: %s", doesSupportMultiAdvertisement());
 
         // Start the Rotor control service thread
-        mRotorCtlService = new RotorCtlService();
+        mRotorCtlService = new RotorCtlService(this);
         mRotorCtlService.run();
 
         setupGATTServer();
         beginAdvertisement();
 
         // Ai Agent Setup
-        mAutoMode = false;
-        final RotorAiService mRotorAiService = new RotorAiService(this, mImageView, mRotorCtlService);
+        mRotorAiService = new RotorAiService(this, mImageView, mRotorCtlService);
         mRotorAiService.run();
 
         mAutoBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (!mAutoMode) {
+                if (!mRotorAiService.isAutoMode()) {
                     mRotorAiService.startAutoMode();
                     showAuto();
                 } else {
@@ -159,6 +158,9 @@ public class MainActivity extends Activity {
         //Stop advertising
         mGattServer.close();
         mAdvertiser.stopAdvertising(advertiseCallback);
+
+        // Stop ai agent
+        mRotorAiService.stop();
     }
 
     private void setupGATTServer() {
@@ -242,13 +244,11 @@ public class MainActivity extends Activity {
     private void showAuto() {
         String homedText = getString(R.string.ui_home);
         mAutoBtn.setText(homedText);
-        mAutoMode = true;
     }
 
     private void showManual() {
         String autoText = getString(R.string.ui_auto);
         mAutoBtn.setText(autoText);
-        mAutoMode = false;
     }
 
 }
