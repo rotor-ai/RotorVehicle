@@ -14,13 +14,10 @@ import com.felhr.usbserial.UsbSerialInterface;
 
 import java.util.HashMap;
 
+import static ai.rotor.rotorvehicle.RotorUtils.*;
 import timber.log.Timber;
 
 public class Arduino implements UsbSerialInterface.UsbReadCallback {
-    private static final int BAUD_RATE = 9600;
-    private static final int ARDUINO_VENDOR_ID = 9025;
-    private static final String ACTION_USB_DEVICE_PERMISSION = "com.example.androidusb.USB_PERMISSION";
-
     private Context mContext;
     private UsbReceiver mUsbReceiver;
     private UsbManager mUsbManager;
@@ -30,6 +27,7 @@ public class Arduino implements UsbSerialInterface.UsbReadCallback {
     private UsbSerialDevice mSerialPort;
     private UsbDeviceConnection mSerialConnection;
     private StringBuilder mBufferedChars = new StringBuilder();
+    final private static String ACTION_USB_DEVICE_PERMISSION = "com.example.androidusb.USB_PERMISSION";
 
 
     public Arduino(Context context) {

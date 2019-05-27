@@ -15,6 +15,7 @@ import android.widget.ImageView;
 import java.nio.ByteBuffer;
 
 import ai.rotor.rotorvehicle.rotor_ctl.RotorCtlService;
+import static ai.rotor.rotorvehicle.RotorUtils.*;
 import timber.log.Timber;
 
 
@@ -106,12 +107,13 @@ public class RotorAiService implements Runnable {
             matrix.postRotate(90);
 
             final Bitmap rotatedBitmap = Bitmap.createBitmap(imgBitmap, 0, 0, imgBitmap.getWidth(), imgBitmap.getHeight(), matrix, true);
+            final Bitmap resizedBitmap = Bitmap.createScaledBitmap(rotatedBitmap, IMAGE_WIDTH, IMAGE_HEIGHT, false);
 
             // Display the image on the imageView
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    mImageView.setImageBitmap(rotatedBitmap);
+                    mImageView.setImageBitmap(resizedBitmap);
                 }
             });
 

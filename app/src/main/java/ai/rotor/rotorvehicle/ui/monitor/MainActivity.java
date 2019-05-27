@@ -118,7 +118,6 @@ public class MainActivity extends Activity {
         mRotorCtlService = new RotorCtlService(this);
 
         setupGATTServer();
-        beginAdvertisement();
 
         // Ai Agent Setup
         mRotorAiService = new RotorAiService(this, mImageView, mRotorCtlService);
@@ -140,6 +139,8 @@ public class MainActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
+
+        beginAdvertisement();
 
         mRotorAiService.run();
         mRotorCtlService.run();

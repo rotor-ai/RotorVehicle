@@ -4,6 +4,7 @@ import android.content.Context;
 import android.hardware.usb.UsbDevice;
 import android.os.Handler;
 
+import ai.rotor.rotorvehicle.R;
 import timber.log.Timber;
 
 public class RotorCtlService implements ArduinoListener, Runnable {
@@ -46,11 +47,17 @@ public class RotorCtlService implements ArduinoListener, Runnable {
         if (mRotorState != stateChangeRequest) {
             mRotorState = stateChangeRequest;
         }
+
+        // If going home, send the home command
+        if (mRotorState == State.HOMED) {
+            sendCommand(mContext.getString(R.string.home_command));
+        }
     }
 
     public void sendCommand(String cmd) {
         Timber.d("Commanding Arduino: %s", cmd);
-        mRotorArduino.send(cmd.getBytes());
+        String fullCmd = cmd + "\n";
+        mRotorArduino.send(fullCmd.getBytes());
     }
 
     @Override
@@ -82,7 +89,7 @@ public class RotorCtlService implements ArduinoListener, Runnable {
 
     @Override
     public void onArduinoMessage(String message) {
-        Timber.d("Received message: %s", message);
+        Timber.d("Arduino response: %s", message);
     }
 
     public void stop() {

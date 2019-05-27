@@ -13,7 +13,6 @@ import timber.log.Timber;
 import static ai.rotor.rotorvehicle.RotorUtils.*;
 
 public class RotorCamera {
-    private static final int MAX_IMAGES = 10;
     private CameraDevice mCameraDevice;
     private CameraCaptureSession mCaptureSession;
 
@@ -48,7 +47,7 @@ public class RotorCamera {
         Timber.d("Using camera id: %s", id);
 
         // Initialize the image processor
-        mImageReader = ImageReader.newInstance(IMAGE_WIDTH, IMAGE_HEIGHT, ImageFormat.JPEG, MAX_IMAGES);
+        mImageReader = ImageReader.newInstance(IMAGE_WIDTH, IMAGE_HEIGHT, ImageFormat.JPEG, MAX_IMAGES_USED);
         mImageReader.setOnImageAvailableListener(imageAvailableListener, backgroundHandler);
 
         // Open the camera resource
