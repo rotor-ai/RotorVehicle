@@ -116,14 +116,12 @@ public class MainActivity extends Activity {
 
         // Start the Rotor control service thread
         mRotorCtlService = new RotorCtlService(this);
-        mRotorCtlService.run();
 
         setupGATTServer();
         beginAdvertisement();
 
         // Ai Agent Setup
         mRotorAiService = new RotorAiService(this, mImageView, mRotorCtlService);
-        mRotorAiService.run();
 
         mAutoBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -140,17 +138,30 @@ public class MainActivity extends Activity {
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+
+        mRotorAiService.run();
+        mRotorCtlService.run();
+    }
+
+    @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         Timber.d("OnActivityResult request code: " + String.valueOf(requestCode) + ", result code: " + String.valueOf(resultCode));
     }
 
     @Override
+    protected void onPause() {
+        super.onPause();
+
+        mRotorCtlService.stop();
+        mRotorAiService.stop();
+    }
+
+    @Override
     protected void onDestroy() {
         super.onDestroy();
-
-        // Stop control service
-        mRotorCtlService.stop();
 
         //unsubscribe RxJava stuff
         blackboxSubscription.dispose();
@@ -158,9 +169,6 @@ public class MainActivity extends Activity {
         //Stop advertising
         mGattServer.close();
         mAdvertiser.stopAdvertising(advertiseCallback);
-
-        // Stop ai agent
-        mRotorAiService.stop();
     }
 
     private void setupGATTServer() {

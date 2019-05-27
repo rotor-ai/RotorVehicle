@@ -17,7 +17,6 @@ import java.nio.ByteBuffer;
 import ai.rotor.rotorvehicle.rotor_ctl.RotorCtlService;
 import timber.log.Timber;
 
-import static ai.rotor.rotorvehicle.RotorUtils.*;
 
 public class RotorAiService implements Runnable {
     private RotorCamera mCamera;
@@ -106,8 +105,7 @@ public class RotorAiService implements Runnable {
             Matrix matrix = new Matrix();
             matrix.postRotate(90);
 
-            Bitmap resizedBitmap = Bitmap.createScaledBitmap(imgBitmap, IMAGE_HEIGHT, IMAGE_WIDTH, false);
-            final Bitmap rotatedBitmap = Bitmap.createBitmap(resizedBitmap, 0, 0, resizedBitmap.getWidth(), resizedBitmap.getHeight(), matrix, true);
+            final Bitmap rotatedBitmap = Bitmap.createBitmap(imgBitmap, 0, 0, imgBitmap.getWidth(), imgBitmap.getHeight(), matrix, true);
 
             // Display the image on the imageView
             runOnUiThread(new Runnable() {

@@ -10,10 +10,10 @@ import java.util.Collections;
 
 import timber.log.Timber;
 
+import static ai.rotor.rotorvehicle.RotorUtils.*;
+
 public class RotorCamera {
-    private static final int IMAGE_WIDTH = 320;
-    private static final int IMAGE_HEIGHT = 240;
-    private static final int MAX_IMAGES = 5;
+    private static final int MAX_IMAGES = 10;
     private CameraDevice mCameraDevice;
     private CameraCaptureSession mCaptureSession;
 
@@ -164,6 +164,14 @@ public class RotorCamera {
     public void shutDown() {
         if (mCameraDevice != null) {
             mCameraDevice.close();
+        }
+    }
+
+    public boolean isOpen() {
+        if (mCameraDevice != null) {
+            return true;
+        } else {
+            return false;
         }
     }
 }
