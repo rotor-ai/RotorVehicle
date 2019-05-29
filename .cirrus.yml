@@ -1,9 +1,5 @@
 container:
   image: cirrusci/android-sdk:28
 
-test_task:
-  check_script: ./gradlew check
-  test_script: ./gradlew test
-
-compile_task:
+build_task:
   script: ./gradlew build
