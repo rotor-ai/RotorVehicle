@@ -13,7 +13,7 @@ public class RotorUtilsTest {
 
     @Before
     public void setup() {
-        correctUUID = UUID.fromString("4204ff84-190d-4cce-9e98-526915402758");
+        correctUUID = UUID.fromString("10101010-1234-5678-90ab-101010101010");
         correctAddress = 8;
 
     }
