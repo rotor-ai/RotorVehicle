@@ -1,8 +1,6 @@
 package ai.rotor.rotorvehicle.ai_agent;
 
-import android.Manifest;
 import android.content.Context;
-import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
@@ -36,10 +34,6 @@ public class RotorAiService implements Runnable {
         this.mUiHandler = new Handler(mMainContext.getMainLooper());
         this.mRotorCtlService = rotorCtlService;
         this.mIsAuto = false;
-
-        if (mMainContext.checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-            Timber.d("Unable to use camera. Permission not granted.");
-        }
 
         // Create handler threads
         mCameraThread = new HandlerThread("CameraBackground");
@@ -83,10 +77,6 @@ public class RotorAiService implements Runnable {
     @Override
     public void run() {
 
-        if (mMainContext.checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-            Timber.d("No permission");
-        }
-
         // Start RotorCamera session
         mCamera.initializeCamera(mMainContext, mCameraHandler, mOnImageAvailableListener);
 
@@ -97,6 +87,12 @@ public class RotorAiService implements Runnable {
         @Override
         public void onImageAvailable(ImageReader reader) {
             Image jpgImage = reader.acquireLatestImage();
+
+            if (jpgImage == null) {
+                Timber.d("Null image");
+                return;
+            }
+
             ByteBuffer imgBuffer = jpgImage.getPlanes()[0].getBuffer();
             byte[] bytes = new byte[imgBuffer.remaining()];
             imgBuffer.get(bytes);

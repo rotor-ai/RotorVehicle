@@ -1,5 +1,6 @@
 package ai.rotor.rotorvehicle.ui.monitor;
 
+import android.Manifest;
 import android.app.Activity;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
@@ -16,11 +17,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.ParcelUuid;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 
+import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -41,6 +45,7 @@ import static ai.rotor.rotorvehicle.RotorUtils.ROTOR_TX_RX_SERVICE_UUID;
 
 public class MainActivity extends Activity {
     private static final int DISCOVERABLE_DURATION = 30;
+    final private static int ACTION_CAMERA_PERMISSION = 4545;
 
     private BluetoothManager mBluetoothManager;
     private Timber.DebugTree debugTree = new Timber.DebugTree();
@@ -49,6 +54,7 @@ public class MainActivity extends Activity {
     private RotorAiService mRotorAiService;
     private Blackbox blackbox;
     private BlackboxRecyclerAdapter blackboxRecyclerAdapter;
+    private Activity mMainActivity;
 
     //BLE
     private RotorGattServerCallback mGattServerCallback;
@@ -70,6 +76,7 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
 
+        mMainActivity = (Activity) this;
         blackbox = DaggerRotorComponent.create().blackbox();
 
         blackboxRecyclerAdapter = new BlackboxRecyclerAdapter(blackbox);
@@ -93,20 +100,6 @@ public class MainActivity extends Activity {
                     }
                 });
 
-//        blackboxSubscription = blackbox.getSubject()
-//                .observeOn(AndroidSchedulers.mainThread())
-//                .subscribe(new Consumer<String>() {
-//            @Override
-//            public void accept(String s) {
-//                debugTextView.setText(String.format("%s\n%s", debugTextView.getText(), s));
-//            }
-//        }, new Consumer<Throwable>() {
-//            @Override
-//            public void accept(Throwable throwable) throws Exception {
-//                Timber.d("blackbox error: " + throwable.getMessage());
-//            }
-//        });
-
         mBluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
         mBluetoothManager.getAdapter().setName("Vehicle");
 
@@ -120,6 +113,8 @@ public class MainActivity extends Activity {
         setupGATTServer();
 
         // Ai Agent Setup
+        ActivityCompat.requestPermissions(mMainActivity, new String[]{Manifest.permission.CAMERA}, ACTION_CAMERA_PERMISSION);
+
         mRotorAiService = new RotorAiService(this, mImageView, mRotorCtlService);
 
         mAutoBtn.setOnClickListener(new View.OnClickListener() {
@@ -142,7 +137,10 @@ public class MainActivity extends Activity {
 
         beginAdvertisement();
 
-        mRotorAiService.run();
+        if (this.checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+            mRotorAiService.run();
+        }
+
         mRotorCtlService.run();
     }
 
@@ -260,4 +258,25 @@ public class MainActivity extends Activity {
         mAutoBtn.setText(autoText);
     }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        switch (requestCode) {
+            case ACTION_CAMERA_PERMISSION: {
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    mRotorAiService.run();
+                } else {
+                    new Handler().postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            ActivityCompat.requestPermissions(mMainActivity, new String[]{Manifest.permission.CAMERA}, ACTION_CAMERA_PERMISSION);
+                        }
+                    }, 3000);
+                }
+                return;
+            }
+        }
+    }
 }

@@ -1,6 +1,8 @@
 package ai.rotor.rotorvehicle.ai_agent;
 
+import android.Manifest;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.graphics.ImageFormat;
 import android.hardware.camera2.*;
 import android.media.ImageReader;
@@ -15,7 +17,6 @@ import static ai.rotor.rotorvehicle.RotorUtils.*;
 public class RotorCamera {
     private CameraDevice mCameraDevice;
     private CameraCaptureSession mCaptureSession;
-
     private ImageReader mImageReader;
 
     private static class InstanceHolder {
@@ -30,6 +31,7 @@ public class RotorCamera {
     public void initializeCamera(Context context,
                                  Handler backgroundHandler,
                                  ImageReader.OnImageAvailableListener imageAvailableListener) {
+
         CameraManager manager = (CameraManager) context.getSystemService(Context.CAMERA_SERVICE);
         String[] camIds = {};
         try {
@@ -53,7 +55,11 @@ public class RotorCamera {
         // Open the camera resource
         try {
             Timber.d("Attempting to open the camera");
-            manager.openCamera(id, mStateCallback, backgroundHandler);
+            if (context.checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+                Timber.d("Unable to use camera. Permission not granted.");
+            } else {
+                manager.openCamera(id, mStateCallback, backgroundHandler);
+            }
         } catch (CameraAccessException e) {
             Timber.d("Camera access exception due to: %s", e.toString());
         }
