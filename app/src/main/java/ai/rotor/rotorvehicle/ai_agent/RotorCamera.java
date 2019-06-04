@@ -4,7 +4,13 @@ import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.ImageFormat;
-import android.hardware.camera2.*;
+import android.hardware.camera2.CameraAccessException;
+import android.hardware.camera2.CameraCaptureSession;
+import android.hardware.camera2.CameraDevice;
+import android.hardware.camera2.CameraManager;
+import android.hardware.camera2.CaptureRequest;
+import android.hardware.camera2.CaptureResult;
+import android.hardware.camera2.TotalCaptureResult;
 import android.media.ImageReader;
 import android.os.Handler;
 
@@ -12,7 +18,9 @@ import java.util.Collections;
 
 import timber.log.Timber;
 
-import static ai.rotor.rotorvehicle.RotorUtils.*;
+import static ai.rotor.rotorvehicle.RotorUtils.IMAGE_HEIGHT;
+import static ai.rotor.rotorvehicle.RotorUtils.IMAGE_WIDTH;
+import static ai.rotor.rotorvehicle.RotorUtils.MAX_IMAGES_USED;
 
 public class RotorCamera {
     private CameraDevice mCameraDevice;

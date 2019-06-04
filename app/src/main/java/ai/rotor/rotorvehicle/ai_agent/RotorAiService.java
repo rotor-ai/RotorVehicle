@@ -13,8 +13,10 @@ import android.widget.ImageView;
 import java.nio.ByteBuffer;
 
 import ai.rotor.rotorvehicle.rotor_ctl.RotorCtlService;
-import static ai.rotor.rotorvehicle.RotorUtils.*;
 import timber.log.Timber;
+
+import static ai.rotor.rotorvehicle.RotorUtils.IMAGE_HEIGHT;
+import static ai.rotor.rotorvehicle.RotorUtils.IMAGE_WIDTH;
 
 
 public class RotorAiService implements Runnable {

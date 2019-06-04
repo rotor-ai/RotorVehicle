@@ -14,8 +14,10 @@ import com.felhr.usbserial.UsbSerialInterface;
 
 import java.util.HashMap;
 
-import static ai.rotor.rotorvehicle.RotorUtils.*;
 import timber.log.Timber;
+
+import static ai.rotor.rotorvehicle.RotorUtils.ARDUINO_VENDOR_ID;
+import static ai.rotor.rotorvehicle.RotorUtils.BAUD_RATE;
 
 public class Arduino implements UsbSerialInterface.UsbReadCallback {
     private Context mContext;

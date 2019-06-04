@@ -3,7 +3,6 @@ package ai.rotor.rotorvehicle.data
 import io.reactivex.subjects.BehaviorSubject
 import timber.log.Timber
 import java.time.Clock
-import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeFormatterBuilder
