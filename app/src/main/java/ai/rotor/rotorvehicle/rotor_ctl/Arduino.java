@@ -30,14 +30,14 @@ public class Arduino implements UsbSerialInterface.UsbReadCallback {
     final private static String ACTION_USB_DEVICE_PERMISSION = "com.example.androidusb.USB_PERMISSION";
 
 
-    public Arduino(Context context) {
+    Arduino(Context context) {
         this.mContext = context;
         this.mUsbReceiver = new UsbReceiver();
         this.mUsbManager = (UsbManager) context.getSystemService(Context.USB_SERVICE);
         this.mIsOpened = false;
     }
 
-    public void setArduinoListener(ArduinoListener listener) {
+    void setArduinoListener(ArduinoListener listener) {
         this.mListener = listener;
 
         IntentFilter intentFilter = new IntentFilter();
@@ -53,20 +53,20 @@ public class Arduino implements UsbSerialInterface.UsbReadCallback {
         }
     }
 
-    public void unSetArduinoListener() {
+    void unSetArduinoListener() {
         this.mListener = null;
     }
 
-    public void open(UsbDevice device) {
+    void open(UsbDevice device) {
         PendingIntent permissionIntent = PendingIntent.getBroadcast(mContext, 0, new Intent(ACTION_USB_DEVICE_PERMISSION), 0);
         mUsbManager.requestPermission(device, permissionIntent);
     }
 
-    public void reOpen() {
+    void reOpen() {
         open(mLastArduinoAttached);
     }
 
-    public void close() {
+    void close() {
         if (mSerialPort != null) {
             mSerialPort.close();
         }
@@ -78,7 +78,7 @@ public class Arduino implements UsbSerialInterface.UsbReadCallback {
         mContext.unregisterReceiver(mUsbReceiver);
     }
 
-    public void send(byte[] bytes) {
+    void send(byte[] bytes) {
         if (mSerialPort != null) {
             mSerialPort.write(bytes);
         }
@@ -151,10 +151,6 @@ public class Arduino implements UsbSerialInterface.UsbReadCallback {
             }
         }
         return null;
-    }
-
-    public boolean isOpened() {
-        return mIsOpened;
     }
 
     @Override

@@ -25,7 +25,7 @@ public class RotorAiService implements Runnable {
     private HandlerThread mCameraThread;
     private Context mMainContext;
     private RotorCtlService mRotorCtlService;
-    private boolean mIsAuto;
+    private boolean mIsAuto = false;
 
     public RotorAiService(Context context, ImageView imageView, RotorCtlService rotorCtlService) {
         Timber.d("Creating RotorAiService");
@@ -33,7 +33,6 @@ public class RotorAiService implements Runnable {
         this.mImageView = imageView;
         this.mUiHandler = new Handler(mMainContext.getMainLooper());
         this.mRotorCtlService = rotorCtlService;
-        this.mIsAuto = false;
 
         // Create handler threads
         mCameraThread = new HandlerThread("CameraBackground");
@@ -69,10 +68,6 @@ public class RotorAiService implements Runnable {
     public boolean isAutoMode() {
         return mIsAuto;
     }
-
-
-    private Context getMainContext() { return mMainContext; }
-
 
     @Override
     public void run() {

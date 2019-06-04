@@ -44,8 +44,8 @@ import static ai.rotor.rotorvehicle.RotorUtils.ROTOR_TX_RX_CHARACTERISTIC_UUID;
 import static ai.rotor.rotorvehicle.RotorUtils.ROTOR_TX_RX_SERVICE_UUID;
 
 public class MainActivity extends Activity {
-    private static final int DISCOVERABLE_DURATION = 30;
     final private static int ACTION_CAMERA_PERMISSION = 4545;
+    final private static int PERMISSION_REQUEST_DELAY_MILLIS = 3000;
 
     private BluetoothManager mBluetoothManager;
     private Timber.DebugTree debugTree = new Timber.DebugTree();
@@ -54,7 +54,6 @@ public class MainActivity extends Activity {
     private RotorAiService mRotorAiService;
     private Blackbox blackbox;
     private BlackboxRecyclerAdapter blackboxRecyclerAdapter;
-    private Activity mMainActivity;
 
     //BLE
     private RotorGattServerCallback mGattServerCallback;
@@ -76,7 +75,6 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
 
-        mMainActivity = (Activity) this;
         blackbox = DaggerRotorComponent.create().blackbox();
 
         blackboxRecyclerAdapter = new BlackboxRecyclerAdapter(blackbox);
@@ -113,7 +111,7 @@ public class MainActivity extends Activity {
         setupGATTServer();
 
         // Ai Agent Setup
-        ActivityCompat.requestPermissions(mMainActivity, new String[]{Manifest.permission.CAMERA}, ACTION_CAMERA_PERMISSION);
+        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, ACTION_CAMERA_PERMISSION);
 
         mRotorAiService = new RotorAiService(this, mImageView, mRotorCtlService);
 
@@ -271,11 +269,10 @@ public class MainActivity extends Activity {
                     new Handler().postDelayed(new Runnable() {
                         @Override
                         public void run() {
-                            ActivityCompat.requestPermissions(mMainActivity, new String[]{Manifest.permission.CAMERA}, ACTION_CAMERA_PERMISSION);
+                            ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.CAMERA}, ACTION_CAMERA_PERMISSION);
                         }
-                    }, 3000);
+                    }, PERMISSION_REQUEST_DELAY_MILLIS);
                 }
-                return;
             }
         }
     }
