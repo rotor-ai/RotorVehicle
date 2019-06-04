@@ -29,10 +29,10 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import ai.rotor.rotorvehicle.R;
-import ai.rotor.rotorvehicle.rotor_ctl.RotorCtlService;
 import ai.rotor.rotorvehicle.ai_agent.RotorAiService;
 import ai.rotor.rotorvehicle.dagger.DaggerRotorComponent;
 import ai.rotor.rotorvehicle.data.Blackbox;
+import ai.rotor.rotorvehicle.rotor_ctl.RotorCtlService;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -52,7 +52,6 @@ public class MainActivity extends Activity {
     Disposable blackboxSubscription;
     private RotorCtlService mRotorCtlService;
     private RotorAiService mRotorAiService;
-    private Blackbox blackbox;
     private BlackboxRecyclerAdapter blackboxRecyclerAdapter;
 
     //BLE
@@ -64,9 +63,12 @@ public class MainActivity extends Activity {
     private BluetoothGattService mGattService;
     private AdvertiseCallback advertiseCallback;
 
-    @BindView(R.id.LogRecyclerView) RecyclerView logRecyclerView;
-    @BindView(R.id.autoBtn) Button mAutoBtn;
-    @BindView(R.id.imageView) ImageView mImageView;
+    @BindView(R.id.LogRecyclerView)
+    RecyclerView logRecyclerView;
+    @BindView(R.id.autoBtn)
+    Button mAutoBtn;
+    @BindView(R.id.imageView)
+    ImageView mImageView;
 
 
     @Override
@@ -75,7 +77,7 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
 
-        blackbox = DaggerRotorComponent.create().blackbox();
+        Blackbox blackbox = DaggerRotorComponent.create().blackbox();
 
         blackboxRecyclerAdapter = new BlackboxRecyclerAdapter(blackbox);
         logRecyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -145,7 +147,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        Timber.d("OnActivityResult request code: " + String.valueOf(requestCode) + ", result code: " + String.valueOf(resultCode));
+        Timber.d("OnActivityResult request code: " + requestCode + ", result code: " + resultCode);
     }
 
     @Override
@@ -210,11 +212,6 @@ public class MainActivity extends Activity {
         mAdvertiser.startAdvertising(mAdSettings, mAdData, advertiseCallback);
     }
 
-    private void goToMode(RotorCtlService.State newState) {
-        Timber.d("Changing to: %s", newState.name());
-        mRotorCtlService.setState(newState);
-    }
-
     private boolean doesSupportMultiAdvertisement() {
         return mBluetoothManager.getAdapter().isMultipleAdvertisementSupported();
     }
@@ -232,7 +229,7 @@ public class MainActivity extends Activity {
         public void onCharacteristicReadRequest(BluetoothDevice device, int requestId, int offset, BluetoothGattCharacteristic characteristic) {
             super.onCharacteristicReadRequest(device, requestId, offset, characteristic);
             Timber.d("onCharacteristicReadRequest ");
-            String s = "this is a reponse";
+            String s = "this is a response";
             byte[] bytes = s.getBytes();
             mGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, 0, bytes);
         }
