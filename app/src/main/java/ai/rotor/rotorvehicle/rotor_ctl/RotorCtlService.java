@@ -78,7 +78,7 @@ public class RotorCtlService implements ArduinoListener, Runnable {
 
     @Override
     public void onUsbPermissionDenied() {
-        Timber.d( "Permission denied...");
+        Timber.d("Permission denied...");
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
