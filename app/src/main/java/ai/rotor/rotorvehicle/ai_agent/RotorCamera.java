@@ -32,13 +32,13 @@ public class RotorCamera {
     }
 
 
-    public static RotorCamera getInstance() {
+    static RotorCamera getInstance() {
         return InstanceHolder.mCamera;
     }
 
-    public void initializeCamera(Context context,
-                                 Handler backgroundHandler,
-                                 ImageReader.OnImageAvailableListener imageAvailableListener) {
+    void initializeCamera(Context context,
+                          Handler backgroundHandler,
+                          ImageReader.OnImageAvailableListener imageAvailableListener) {
 
         CameraManager manager = (CameraManager) context.getSystemService(Context.CAMERA_SERVICE);
         String[] camIds = {};
@@ -100,7 +100,7 @@ public class RotorCamera {
         }
     };
 
-    public void startCapturing() {
+    void startCapturing() {
         Timber.d("Starting camera capture session");
 
         if (mCameraDevice == null) {
@@ -163,7 +163,7 @@ public class RotorCamera {
         }
     };
 
-    public void stopCapturing() {
+    void stopCapturing() {
         Timber.d("Stopping camera capture session");
 
         if (mCaptureSession != null) {
@@ -174,7 +174,7 @@ public class RotorCamera {
         }
     }
 
-    public void shutDown() {
+    void shutDown() {
         if (mCameraDevice != null) {
             mCameraDevice.close();
         }

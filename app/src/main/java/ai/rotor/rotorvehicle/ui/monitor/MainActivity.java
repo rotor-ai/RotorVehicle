@@ -2,6 +2,7 @@ package ai.rotor.rotorvehicle.ui.monitor;
 
 import android.Manifest;
 import android.app.Activity;
+import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
@@ -54,6 +55,8 @@ public class MainActivity extends Activity {
     private RotorAiService mRotorAiService;
     private BlackboxRecyclerAdapter blackboxRecyclerAdapter;
 
+    private int ENABLE_BT_REQUEST_CODE = 1234;
+
     //BLE
     private RotorGattServerCallback mGattServerCallback;
     private BluetoothLeAdvertiser mAdvertiser;
@@ -102,15 +105,20 @@ public class MainActivity extends Activity {
 
         mBluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
         mBluetoothManager.getAdapter().setName("Vehicle");
-
         Timber.d("onCreate, thread ID: %s", Thread.currentThread().getId());
         Timber.d("supports BLE: %s", getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE));
         Timber.d("supports multi advertisement: %s", doesSupportMultiAdvertisement());
 
+        //check that bluetooth is enabled
+        if (!mBluetoothManager.getAdapter().isEnabled()) {
+            startActivityForResult(new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE), ENABLE_BT_REQUEST_CODE);
+        }
+        else {
+            setupGATTServer();
+        }
+
         // Start the Rotor control service thread
         mRotorCtlService = new RotorCtlService(this);
-
-        setupGATTServer();
 
         // Ai Agent Setup
         ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, ACTION_CAMERA_PERMISSION);
@@ -135,8 +143,6 @@ public class MainActivity extends Activity {
     protected void onResume() {
         super.onResume();
 
-        beginAdvertisement();
-
         if (this.checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
             mRotorAiService.run();
         }
@@ -148,6 +154,11 @@ public class MainActivity extends Activity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         Timber.d("OnActivityResult request code: " + requestCode + ", result code: " + resultCode);
+
+        if (requestCode == ENABLE_BT_REQUEST_CODE && resultCode == RESULT_OK) {
+            setupGATTServer();
+        }
+
     }
 
     @Override
@@ -167,7 +178,7 @@ public class MainActivity extends Activity {
 
         //Stop advertising
         mGattServer.close();
-        mAdvertiser.stopAdvertising(advertiseCallback);
+        stopAdvertisement();
     }
 
     private void setupGATTServer() {
@@ -205,11 +216,22 @@ public class MainActivity extends Activity {
                 Timber.d("GATT Server failed to start");
             }
         };
+
+        StartAdvertisement();
     }
 
-    private void beginAdvertisement() {
-        Timber.d("Beginning advertisement");
-        mAdvertiser.startAdvertising(mAdSettings, mAdData, advertiseCallback);
+    private void StartAdvertisement() {
+        if (mAdvertiser != null && advertiseCallback != null) {
+            Timber.d("Beginning advertisement");
+            mAdvertiser.startAdvertising(mAdSettings, mAdData, advertiseCallback);
+        }
+    }
+
+    private void stopAdvertisement() {
+        if (mAdvertiser != null) {
+            Timber.d("Stopping advertisement");
+            mAdvertiser.stopAdvertising(advertiseCallback);
+        }
     }
 
     private boolean doesSupportMultiAdvertisement() {
