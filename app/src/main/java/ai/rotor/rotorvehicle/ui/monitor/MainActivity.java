@@ -1,6 +1,8 @@
 package ai.rotor.rotorvehicle.ui.monitor;
 
+import android.Manifest;
 import android.app.Activity;
+import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
@@ -16,20 +18,22 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.ParcelUuid;
-import android.util.Log;
 import android.view.View;
-import android.widget.TextView;
+import android.widget.Button;
+import android.widget.ImageView;
 
-import org.w3c.dom.Text;
-
-import ai.rotor.rotorvehicle.R;
-import ai.rotor.rotorvehicle.RotorCtlService;
-import ai.rotor.rotorvehicle.dagger.DaggerRotorComponent;
-import ai.rotor.rotorvehicle.data.Blackbox;
 import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import ai.rotor.rotorvehicle.R;
+import ai.rotor.rotorvehicle.ai_agent.RotorAiService;
+import ai.rotor.rotorvehicle.dagger.DaggerRotorComponent;
+import ai.rotor.rotorvehicle.data.Blackbox;
+import ai.rotor.rotorvehicle.rotor_ctl.RotorCtlService;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -41,14 +45,17 @@ import static ai.rotor.rotorvehicle.RotorUtils.ROTOR_TX_RX_CHARACTERISTIC_UUID;
 import static ai.rotor.rotorvehicle.RotorUtils.ROTOR_TX_RX_SERVICE_UUID;
 
 public class MainActivity extends Activity {
-    private static final int DISCOVERABLE_DURATION = 30;
+    final private static int ACTION_CAMERA_PERMISSION = 4545;
+    final private static int PERMISSION_REQUEST_DELAY_MILLIS = 3000;
 
     private BluetoothManager mBluetoothManager;
     private Timber.DebugTree debugTree = new Timber.DebugTree();
     Disposable blackboxSubscription;
     private RotorCtlService mRotorCtlService;
-    private Blackbox blackbox;
+    private RotorAiService mRotorAiService;
     private BlackboxRecyclerAdapter blackboxRecyclerAdapter;
+
+    private int ENABLE_BT_REQUEST_CODE = 1234;
 
     //BLE
     private RotorGattServerCallback mGattServerCallback;
@@ -61,6 +68,11 @@ public class MainActivity extends Activity {
 
     @BindView(R.id.LogRecyclerView)
     RecyclerView logRecyclerView;
+    @BindView(R.id.autoBtn)
+    Button mAutoBtn;
+    @BindView(R.id.imageView)
+    ImageView mImageView;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,7 +80,7 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
 
-        blackbox = DaggerRotorComponent.create().blackbox();
+        Blackbox blackbox = DaggerRotorComponent.create().blackbox();
 
         blackboxRecyclerAdapter = new BlackboxRecyclerAdapter(blackbox);
         logRecyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -82,7 +94,6 @@ public class MainActivity extends Activity {
                 .subscribe(new Consumer<String>() {
                     @Override
                     public void accept(String s) throws Exception {
-                        Log.d("STUDEBUG", "onNext");
                         blackboxRecyclerAdapter.notifyDataSetChanged();
                     }
                 }, new Consumer<Throwable>() {
@@ -92,41 +103,70 @@ public class MainActivity extends Activity {
                     }
                 });
 
-//        blackboxSubscription = blackbox.getSubject()
-//                .observeOn(AndroidSchedulers.mainThread())
-//                .subscribe(new Consumer<String>() {
-//            @Override
-//            public void accept(String s) {
-//                debugTextView.setText(String.format("%s\n%s", debugTextView.getText(), s));
-//            }
-//        }, new Consumer<Throwable>() {
-//            @Override
-//            public void accept(Throwable throwable) throws Exception {
-//                Timber.d("blackbox error: " + throwable.getMessage());
-//            }
-//        });
-
         mBluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
         mBluetoothManager.getAdapter().setName("Vehicle");
-
         Timber.d("onCreate, thread ID: %s", Thread.currentThread().getId());
-        Timber.d("checking for BLE support...");
         Timber.d("supports BLE: %s", getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE));
-        Timber.d("checking for MultiAdvertisement support...");
         Timber.d("supports multi advertisement: %s", doesSupportMultiAdvertisement());
+
+        //check that bluetooth is enabled
+        if (!mBluetoothManager.getAdapter().isEnabled()) {
+            startActivityForResult(new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE), ENABLE_BT_REQUEST_CODE);
+        }
+        else {
+            setupGATTServer();
+        }
 
         // Start the Rotor control service thread
         mRotorCtlService = new RotorCtlService(this);
-        mRotorCtlService.run();
 
-        setupGATTServer();
-        beginAdvertisement();
+        // Ai Agent Setup
+        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, ACTION_CAMERA_PERMISSION);
+
+        mRotorAiService = new RotorAiService(this, mImageView, mRotorCtlService);
+
+        mAutoBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (!mRotorAiService.isAutoMode()) {
+                    mRotorAiService.startAutoMode();
+                    showAuto();
+                } else {
+                    mRotorAiService.stopAutoMode();
+                    showManual();
+                }
+            }
+        });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        if (this.checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+            mRotorAiService.run();
+        }
+
+        mRotorCtlService.run();
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        Timber.d("OnActivityResult request code: " + String.valueOf(requestCode) + ", result code: " + String.valueOf(resultCode));
+        Timber.d("OnActivityResult request code: " + requestCode + ", result code: " + resultCode);
+
+        if (requestCode == ENABLE_BT_REQUEST_CODE && resultCode == RESULT_OK) {
+            setupGATTServer();
+        }
+
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        mRotorCtlService.stop();
+        mRotorAiService.stop();
     }
 
     @Override
@@ -138,7 +178,7 @@ public class MainActivity extends Activity {
 
         //Stop advertising
         mGattServer.close();
-        mAdvertiser.stopAdvertising(advertiseCallback);
+        stopAdvertisement();
     }
 
     private void setupGATTServer() {
@@ -176,16 +216,22 @@ public class MainActivity extends Activity {
                 Timber.d("GATT Server failed to start");
             }
         };
+
+        StartAdvertisement();
     }
 
-    private void beginAdvertisement() {
-        Timber.d("Beginning advertisement");
-        mAdvertiser.startAdvertising(mAdSettings, mAdData, advertiseCallback);
+    private void StartAdvertisement() {
+        if (mAdvertiser != null && advertiseCallback != null) {
+            Timber.d("Beginning advertisement");
+            mAdvertiser.startAdvertising(mAdSettings, mAdData, advertiseCallback);
+        }
     }
 
-    private void goToMode(RotorCtlService.State newState) {
-        Timber.d("Changing to: %s", newState.name());
-        mRotorCtlService.setState(newState);
+    private void stopAdvertisement() {
+        if (mAdvertiser != null) {
+            Timber.d("Stopping advertisement");
+            mAdvertiser.stopAdvertising(advertiseCallback);
+        }
     }
 
     private boolean doesSupportMultiAdvertisement() {
@@ -205,7 +251,7 @@ public class MainActivity extends Activity {
         public void onCharacteristicReadRequest(BluetoothDevice device, int requestId, int offset, BluetoothGattCharacteristic characteristic) {
             super.onCharacteristicReadRequest(device, requestId, offset, characteristic);
             Timber.d("onCharacteristicReadRequest ");
-            String s = "this is a reponse";
+            String s = "this is a response";
             byte[] bytes = s.getBytes();
             mGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, 0, bytes);
         }
@@ -214,9 +260,39 @@ public class MainActivity extends Activity {
         public void onCharacteristicWriteRequest(BluetoothDevice device, int requestId, BluetoothGattCharacteristic characteristic, boolean preparedWrite, boolean responseNeeded, int offset, byte[] value) {
             super.onCharacteristicWriteRequest(device, requestId, characteristic, preparedWrite, responseNeeded, offset, value);
             String s = new String(value, 0, value.length);
-            Timber.d("onCharacteristicWriteRequest: %s", s);
+            Timber.d("Command received: %s", s);
             mRotorCtlService.sendCommand(s);
         }
     }
 
+    private void showAuto() {
+        String homedText = getString(R.string.ui_home);
+        mAutoBtn.setText(homedText);
+    }
+
+    private void showManual() {
+        String autoText = getString(R.string.ui_auto);
+        mAutoBtn.setText(autoText);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        switch (requestCode) {
+            case ACTION_CAMERA_PERMISSION: {
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    mRotorAiService.run();
+                } else {
+                    new Handler().postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.CAMERA}, ACTION_CAMERA_PERMISSION);
+                        }
+                    }, PERMISSION_REQUEST_DELAY_MILLIS);
+                }
+            }
+        }
+    }
 }

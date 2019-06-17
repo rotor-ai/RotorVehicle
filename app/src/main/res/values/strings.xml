@@ -5,4 +5,7 @@
     <string name="ui_unpaired">UNPAIRED</string>
     <string name="ui_starting_discoverability">starting discoverability…</string>
     <string name="ui_too_many">Too many paired devices!</string>
+    <string name="ui_home">HOME</string>
+    <string name="ui_auto">AUTO</string>
+    <string name="home_command">N000 N000</string>
 </resources>

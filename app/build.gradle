@@ -22,8 +22,6 @@ android {
 }
 
 dependencies {
-    compileOnly 'com.google.android.things:androidthings:1.0'
-
     //1st party dependencies
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
@@ -55,6 +53,8 @@ dependencies {
     androidTestImplementation 'androidx.test:runner:1.1.1'
 
     kaptTest 'com.google.dagger:dagger-compiler:2.22.1'
+
+    implementation 'com.github.felHR85:UsbSerial:6.0.6'
 
 }
 repositories {
