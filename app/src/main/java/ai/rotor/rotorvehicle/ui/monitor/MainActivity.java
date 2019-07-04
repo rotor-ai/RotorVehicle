@@ -36,6 +36,7 @@ import ai.rotor.rotorvehicle.data.Blackbox;
 import ai.rotor.rotorvehicle.rotor_ctl.RotorCtlService;
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
@@ -70,7 +71,7 @@ public class MainActivity extends Activity {
     RecyclerView logRecyclerView;
     @BindView(R.id.autoBtn)
     Button mAutoBtn;
-    @BindView(R.id.imageView)
+    @BindView(R.id.viewFinder)
     ImageView mImageView;
 
 
@@ -91,17 +92,7 @@ public class MainActivity extends Activity {
 
         blackboxSubscription = blackbox.getSubject()
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Consumer<String>() {
-                    @Override
-                    public void accept(String s) throws Exception {
-                        blackboxRecyclerAdapter.notifyDataSetChanged();
-                    }
-                }, new Consumer<Throwable>() {
-                    @Override
-                    public void accept(Throwable throwable) throws Exception {
-                        Timber.d(throwable.toString());
-                    }
-                });
+                .subscribe(s -> blackboxRecyclerAdapter.notifyDataSetChanged(), throwable -> Timber.d(throwable.toString()));
 
         mBluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
         mBluetoothManager.getAdapter().setName("Vehicle");
@@ -125,18 +116,17 @@ public class MainActivity extends Activity {
 
         mRotorAiService = new RotorAiService(this, mImageView, mRotorCtlService);
 
-        mAutoBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (!mRotorAiService.isAutoMode()) {
-                    mRotorAiService.startAutoMode();
-                    showAuto();
-                } else {
-                    mRotorAiService.stopAutoMode();
-                    showManual();
-                }
-            }
-        });
+    }
+
+    @OnClick(R.id.autoBtn)
+    public void onClickAutoBtn() {
+        if (!mRotorAiService.isAutoMode()) {
+            mRotorAiService.startAutoMode();
+            showAuto();
+        } else {
+            mRotorAiService.stopAutoMode();
+            showManual();
+        }
     }
 
     @Override

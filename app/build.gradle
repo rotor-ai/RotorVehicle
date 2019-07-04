@@ -4,10 +4,15 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
 
 android {
+    compileOptions {
+        targetCompatibility = "8"
+        sourceCompatibility = "8"
+    }
+
     compileSdkVersion 28
     defaultConfig {
         applicationId "ai.rotor.rotorvehicle"
-        minSdkVersion 27
+        minSdkVersion 26
         targetSdkVersion 28
         versionCode 1
         versionName "0.1.0"
