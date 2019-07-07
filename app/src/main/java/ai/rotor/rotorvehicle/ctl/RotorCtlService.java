@@ -1,4 +1,4 @@
-package ai.rotor.rotorvehicle.rotor_ctl;
+package ai.rotor.rotorvehicle.ctl;
 
 import android.content.Context;
 import android.hardware.usb.UsbDevice;
