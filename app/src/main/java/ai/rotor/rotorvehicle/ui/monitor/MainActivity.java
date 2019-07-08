@@ -94,7 +94,6 @@ public class MainActivity extends Activity {
 
         mBluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
         mBluetoothManager.getAdapter().setName("Vehicle");
-        Timber.d("onCreate, thread ID: %s", Thread.currentThread().getId());
         Timber.d("supports BLE: %s", getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE));
         Timber.d("supports multi advertisement: %s", doesSupportMultiAdvertisement());
 
