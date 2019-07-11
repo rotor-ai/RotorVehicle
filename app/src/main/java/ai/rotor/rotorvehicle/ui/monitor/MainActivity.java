@@ -72,7 +72,6 @@ public class MainActivity extends Activity {
     @BindView(R.id.viewFinder)
     ImageView mImageView;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -93,16 +92,18 @@ public class MainActivity extends Activity {
                 .subscribe(s -> blackboxRecyclerAdapter.notifyDataSetChanged(), throwable -> Timber.d(throwable.toString()));
 
         mBluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
-        mBluetoothManager.getAdapter().setName("Vehicle");
-        Timber.d("supports BLE: %s", getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE));
-        Timber.d("supports multi advertisement: %s", doesSupportMultiAdvertisement());
+        if (mBluetoothManager.getAdapter() != null){
+            mBluetoothManager.getAdapter().setName("Vehicle");
+            Timber.d("supports BLE: %s", getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE));
+            Timber.d("supports multi advertisement: %s", doesSupportMultiAdvertisement());
 
-        //check that bluetooth is enabled
-        if (!mBluetoothManager.getAdapter().isEnabled()) {
-            startActivityForResult(new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE), ENABLE_BT_REQUEST_CODE);
-        }
-        else {
-            setupGATTServer();
+            //check that bluetooth is enabled
+            if (!mBluetoothManager.getAdapter().isEnabled()) {
+                startActivityForResult(new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE), ENABLE_BT_REQUEST_CODE);
+            }
+            else {
+                setupGATTServer();
+            }
         }
 
         // Start the Rotor control service thread
@@ -164,7 +165,7 @@ public class MainActivity extends Activity {
         blackboxSubscription.dispose();
 
         //Stop advertising
-        mGattServer.close();
+        if (mGattServer != null) mGattServer.close();
         stopAdvertisement();
     }
 
