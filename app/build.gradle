@@ -33,9 +33,9 @@ dependencies {
     implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
     implementation 'androidx.recyclerview:recyclerview:1.0.0'
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
-    implementation 'com.google.dagger:dagger:2.22.1'
-    implementation 'com.google.dagger:dagger-android:2.22.1'
-    implementation 'com.google.dagger:dagger-android-support:2.22.1'
+    implementation 'com.google.dagger:dagger:2.23.2'
+    implementation 'com.google.dagger:dagger-android:2.23.2'
+    implementation 'com.google.dagger:dagger-android-support:2.23.2'
 
     //3rd party dependencies
     implementation 'com.jakewharton:butterknife:10.0.0'
@@ -45,8 +45,8 @@ dependencies {
     implementation 'junit:junit:4.12'
 
     //annotation processors
-    kapt 'com.google.dagger:dagger-compiler:2.22.1'
-    kapt 'com.google.dagger:dagger-android-processor:2.22.1'
+    kapt 'com.google.dagger:dagger-compiler:2.23.2'
+    kapt 'com.google.dagger:dagger-android-processor:2.23.2'
     kapt 'com.jakewharton:butterknife-compiler:10.0.0'
 
     //test related dependencies
