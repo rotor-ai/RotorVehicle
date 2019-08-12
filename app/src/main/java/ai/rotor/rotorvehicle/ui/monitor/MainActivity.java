@@ -20,7 +20,6 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.ParcelUuid;
-import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 
@@ -30,15 +29,15 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import ai.rotor.rotorvehicle.R;
-import ai.rotor.rotorvehicle.ai_agent.RotorAiService;
+import ai.rotor.rotorvehicle.agent.RotorAiService;
 import ai.rotor.rotorvehicle.dagger.DaggerRotorComponent;
 import ai.rotor.rotorvehicle.data.Blackbox;
-import ai.rotor.rotorvehicle.rotor_ctl.RotorCtlService;
+import ai.rotor.rotorvehicle.ctl.RotorCtlService;
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
-import io.reactivex.functions.Consumer;
 import timber.log.Timber;
 
 import static ai.rotor.rotorvehicle.RotorUtils.ROTOR_TX_RX_CHARACTERISTIC_UUID;
@@ -70,9 +69,8 @@ public class MainActivity extends Activity {
     RecyclerView logRecyclerView;
     @BindView(R.id.autoBtn)
     Button mAutoBtn;
-    @BindView(R.id.imageView)
+    @BindView(R.id.viewFinder)
     ImageView mImageView;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -91,30 +89,21 @@ public class MainActivity extends Activity {
 
         blackboxSubscription = blackbox.getSubject()
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Consumer<String>() {
-                    @Override
-                    public void accept(String s) throws Exception {
-                        blackboxRecyclerAdapter.notifyDataSetChanged();
-                    }
-                }, new Consumer<Throwable>() {
-                    @Override
-                    public void accept(Throwable throwable) throws Exception {
-                        Timber.d(throwable.toString());
-                    }
-                });
+                .subscribe(s -> blackboxRecyclerAdapter.notifyDataSetChanged(), throwable -> Timber.d(throwable.toString()));
 
         mBluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
-        mBluetoothManager.getAdapter().setName("Vehicle");
-        Timber.d("onCreate, thread ID: %s", Thread.currentThread().getId());
-        Timber.d("supports BLE: %s", getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE));
-        Timber.d("supports multi advertisement: %s", doesSupportMultiAdvertisement());
+        if (mBluetoothManager.getAdapter() != null){
+            mBluetoothManager.getAdapter().setName("Vehicle");
+            Timber.d("supports BLE: %s", getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE));
+            Timber.d("supports multi advertisement: %s", doesSupportMultiAdvertisement());
 
-        //check that bluetooth is enabled
-        if (!mBluetoothManager.getAdapter().isEnabled()) {
-            startActivityForResult(new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE), ENABLE_BT_REQUEST_CODE);
-        }
-        else {
-            setupGATTServer();
+            //check that bluetooth is enabled
+            if (!mBluetoothManager.getAdapter().isEnabled()) {
+                startActivityForResult(new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE), ENABLE_BT_REQUEST_CODE);
+            }
+            else {
+                setupGATTServer();
+            }
         }
 
         // Start the Rotor control service thread
@@ -125,18 +114,17 @@ public class MainActivity extends Activity {
 
         mRotorAiService = new RotorAiService(this, mImageView, mRotorCtlService);
 
-        mAutoBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (!mRotorAiService.isAutoMode()) {
-                    mRotorAiService.startAutoMode();
-                    showAuto();
-                } else {
-                    mRotorAiService.stopAutoMode();
-                    showManual();
-                }
-            }
-        });
+    }
+
+    @OnClick(R.id.autoBtn)
+    public void onClickAutoBtn() {
+        if (!mRotorAiService.isAutoMode()) {
+            mRotorAiService.startAutoMode();
+            showAuto();
+        } else {
+            mRotorAiService.stopAutoMode();
+            showManual();
+        }
     }
 
     @Override
@@ -177,7 +165,7 @@ public class MainActivity extends Activity {
         blackboxSubscription.dispose();
 
         //Stop advertising
-        mGattServer.close();
+        if (mGattServer != null) mGattServer.close();
         stopAdvertisement();
     }
 

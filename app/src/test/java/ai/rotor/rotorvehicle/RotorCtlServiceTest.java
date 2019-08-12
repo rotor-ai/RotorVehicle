@@ -4,7 +4,7 @@ import android.content.Context;
 
 import org.junit.Test;
 
-import ai.rotor.rotorvehicle.rotor_ctl.RotorCtlService;
+import ai.rotor.rotorvehicle.ctl.RotorCtlService;
 
 import static org.junit.Assert.assertEquals;
 

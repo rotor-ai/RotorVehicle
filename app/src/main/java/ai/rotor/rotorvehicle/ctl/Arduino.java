@@ -1,4 +1,4 @@
-package ai.rotor.rotorvehicle.rotor_ctl;
+package ai.rotor.rotorvehicle.ctl;
 
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;

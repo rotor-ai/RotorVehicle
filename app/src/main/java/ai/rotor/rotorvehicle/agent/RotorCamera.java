@@ -1,4 +1,4 @@
-package ai.rotor.rotorvehicle.ai_agent;
+package ai.rotor.rotorvehicle.agent;
 
 import android.Manifest;
 import android.content.Context;

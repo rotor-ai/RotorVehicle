@@ -1,4 +1,4 @@
-package ai.rotor.rotorvehicle.ai_agent;
+package ai.rotor.rotorvehicle.agent;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -12,7 +12,7 @@ import android.widget.ImageView;
 
 import java.nio.ByteBuffer;
 
-import ai.rotor.rotorvehicle.rotor_ctl.RotorCtlService;
+import ai.rotor.rotorvehicle.ctl.RotorCtlService;
 import timber.log.Timber;
 
 import static ai.rotor.rotorvehicle.RotorUtils.IMAGE_HEIGHT;
