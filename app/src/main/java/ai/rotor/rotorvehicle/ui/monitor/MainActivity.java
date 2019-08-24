@@ -20,6 +20,7 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.ParcelUuid;
+import android.view.TextureView;
 import android.widget.Button;
 import android.widget.ImageView;
 
@@ -51,7 +52,7 @@ public class MainActivity extends Activity {
     private Timber.DebugTree debugTree = new Timber.DebugTree();
     Disposable blackboxSubscription;
     private RotorCtlService mRotorCtlService;
-    private RotorAiService mRotorAiService;
+    //private RotorAiService mRotorAiService;
     private BlackboxRecyclerAdapter blackboxRecyclerAdapter;
 
     private int ENABLE_BT_REQUEST_CODE = 1234;
@@ -70,7 +71,7 @@ public class MainActivity extends Activity {
     @BindView(R.id.autoBtn)
     Button mAutoBtn;
     @BindView(R.id.viewFinder)
-    ImageView mImageView;
+    TextureView mViewFinder;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -112,19 +113,19 @@ public class MainActivity extends Activity {
         // Ai Agent Setup
         ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, ACTION_CAMERA_PERMISSION);
 
-        mRotorAiService = new RotorAiService(this, mImageView, mRotorCtlService);
+        //mRotorAiService = new RotorAiService(this, mImageView, mRotorCtlService);
 
     }
 
     @OnClick(R.id.autoBtn)
     public void onClickAutoBtn() {
-        if (!mRotorAiService.isAutoMode()) {
-            mRotorAiService.startAutoMode();
-            showAuto();
-        } else {
-            mRotorAiService.stopAutoMode();
-            showManual();
-        }
+//        if (!mRotorAiService.isAutoMode()) {
+//            mRotorAiService.startAutoMode();
+//            showAuto();
+//        } else {
+//            mRotorAiService.stopAutoMode();
+//            showManual();
+//        }
     }
 
     @Override
@@ -132,7 +133,7 @@ public class MainActivity extends Activity {
         super.onResume();
 
         if (this.checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
-            mRotorAiService.run();
+            //mRotorAiService.run();
         }
 
         mRotorCtlService.run();
@@ -154,7 +155,7 @@ public class MainActivity extends Activity {
         super.onPause();
 
         mRotorCtlService.stop();
-        mRotorAiService.stop();
+        //mRotorAiService.stop();
     }
 
     @Override
@@ -271,7 +272,7 @@ public class MainActivity extends Activity {
             case ACTION_CAMERA_PERMISSION: {
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    mRotorAiService.run();
+                    //mRotorAiService.run();
                 } else {
                     new Handler().postDelayed(new Runnable() {
                         @Override
