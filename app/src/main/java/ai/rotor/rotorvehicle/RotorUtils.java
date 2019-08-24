@@ -9,8 +9,8 @@ public class RotorUtils {
     public static final String HOMED_CMD = "N000 N000";
 
     // Camera constants
-    public static final int IMAGE_HEIGHT = 300;
-    public static final int IMAGE_WIDTH = 300;
+    public static final int IMAGE_HEIGHT = 256;
+    public static final int IMAGE_WIDTH = 256;
     public static final int MAX_IMAGES_USED = 5;
 
     // Arduino constants

@@ -17,15 +17,27 @@ import android.bluetooth.le.BluetoothLeAdvertiser;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Matrix;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.ParcelUuid;
+import android.util.Rational;
+import android.util.Size;
+import android.view.Surface;
 import android.view.TextureView;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.camera.core.CameraX;
+import androidx.camera.core.Preview;
+import androidx.camera.core.PreviewConfig;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import androidx.lifecycle.LifecycleOwner;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -41,11 +53,13 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import timber.log.Timber;
 
+import static ai.rotor.rotorvehicle.RotorUtils.IMAGE_HEIGHT;
+import static ai.rotor.rotorvehicle.RotorUtils.IMAGE_WIDTH;
 import static ai.rotor.rotorvehicle.RotorUtils.ROTOR_TX_RX_CHARACTERISTIC_UUID;
 import static ai.rotor.rotorvehicle.RotorUtils.ROTOR_TX_RX_SERVICE_UUID;
 
-public class MainActivity extends Activity {
-    final private static int ACTION_CAMERA_PERMISSION = 4545;
+public class MainActivity extends AppCompatActivity implements LifecycleOwner {
+    final private static int REQUEST_CAMERA_PERMISSION = 4545;
     final private static int PERMISSION_REQUEST_DELAY_MILLIS = 3000;
 
     private BluetoothManager mBluetoothManager;
@@ -65,6 +79,13 @@ public class MainActivity extends Activity {
     private BluetoothGattServer mGattServer;
     private BluetoothGattService mGattService;
     private AdvertiseCallback advertiseCallback;
+
+    //image processing
+    private PreviewConfig previewConfig = new PreviewConfig
+            .Builder()
+            .setTargetAspectRatio(new Rational(1,1))
+            .setTargetResolution(new Size(IMAGE_WIDTH, IMAGE_HEIGHT))
+            .build();
 
     @BindView(R.id.LogRecyclerView)
     RecyclerView logRecyclerView;
@@ -92,6 +113,8 @@ public class MainActivity extends Activity {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(s -> blackboxRecyclerAdapter.notifyDataSetChanged(), throwable -> Timber.d(throwable.toString()));
 
+        mViewFinder.addOnLayoutChangeListener((v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) -> updateViewFinder());
+
         mBluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
         if (mBluetoothManager.getAdapter() != null){
             mBluetoothManager.getAdapter().setName("Vehicle");
@@ -110,15 +133,19 @@ public class MainActivity extends Activity {
         // Start the Rotor control service thread
         mRotorCtlService = new RotorCtlService(this);
 
-        // Ai Agent Setup
-        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, ACTION_CAMERA_PERMISSION);
-
         //mRotorAiService = new RotorAiService(this, mImageView, mRotorCtlService);
 
     }
 
     @OnClick(R.id.autoBtn)
     public void onClickAutoBtn() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, REQUEST_CAMERA_PERMISSION);
+        }
+        else {
+            mViewFinder.post(() -> startImageCapture());
+        }
+
 //        if (!mRotorAiService.isAutoMode()) {
 //            mRotorAiService.startAutoMode();
 //            showAuto();
@@ -264,22 +291,56 @@ public class MainActivity extends Activity {
         mAutoBtn.setText(autoText);
     }
 
+    void startImageCapture() {
+        Preview preview = new Preview(previewConfig);
+
+        preview.setOnPreviewOutputUpdateListener(previewOutput -> {
+            ViewGroup parent = (ViewGroup) mViewFinder.getParent();
+            parent.removeView(mViewFinder);
+            parent.addView(mViewFinder, 0);
+
+            mViewFinder.setSurfaceTexture(previewOutput.getSurfaceTexture());
+            updateViewFinder();
+        });
+
+        CameraX.bindToLifecycle(this, preview);
+    }
+
+    void updateViewFinder() {
+
+        Matrix matrix = new Matrix();
+
+        float x = mViewFinder.getWidth() / 2f;
+        float y = mViewFinder.getHeight() / 2f;
+
+        switch (mViewFinder.getDisplay().getRotation()) {
+            case Surface.ROTATION_90:
+                matrix.postRotate(-90f, x, y);
+                break;
+            case Surface.ROTATION_180:
+                matrix.postRotate(-180f, x, y);
+                break;
+            case Surface.ROTATION_270:
+                matrix.postRotate(-270f, x, y);
+                break;
+            default:
+                matrix.postRotate(0f, x, y);
+                break;
+        }
+        mViewFinder.setTransform(matrix);
+    }
+
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
         switch (requestCode) {
-            case ACTION_CAMERA_PERMISSION: {
-                if (grantResults.length > 0
-                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    //mRotorAiService.run();
-                } else {
-                    new Handler().postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.CAMERA}, ACTION_CAMERA_PERMISSION);
-                        }
-                    }, PERMISSION_REQUEST_DELAY_MILLIS);
+            case REQUEST_CAMERA_PERMISSION: {
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    mViewFinder.post(() -> startImageCapture());
+                }
+                else {
+                    //rip, permission denied :(
                 }
             }
         }
