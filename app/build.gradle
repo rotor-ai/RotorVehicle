@@ -9,6 +9,10 @@ android {
         sourceCompatibility = "8"
     }
 
+    dataBinding {
+        enabled = true
+    }
+
     compileSdkVersion 28
     defaultConfig {
         applicationId "ai.rotor.rotorvehicle"
@@ -48,6 +52,8 @@ dependencies {
     implementation 'junit:junit:4.12'
 
     //annotation processors
+    implementation 'androidx.lifecycle:lifecycle-extensions:2.0.0'
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.0.0'
     kapt 'com.google.dagger:dagger-compiler:2.23.2'
     kapt 'com.google.dagger:dagger-android-processor:2.23.2'
     kapt 'com.jakewharton:butterknife-compiler:10.0.0'
