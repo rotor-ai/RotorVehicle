@@ -27,6 +27,8 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import timber.log.Timber;
 
+import static ai.rotor.rotorvehicle.RotorUtils.IMAGE_HEIGHT;
+import static ai.rotor.rotorvehicle.RotorUtils.IMAGE_WIDTH;
 import static androidx.core.content.ContextCompat.checkSelfPermission;
 
 
@@ -44,8 +46,8 @@ public class DashFragment extends Fragment implements LifecycleOwner {
 
     PreviewConfig frontCameraPreviewConfig =
                     new PreviewConfig.Builder()
-                    .setTargetAspectRatio(new Rational(1,1))
-                    .setTargetResolution(new Size(128, 128)).build();
+                    .setTargetAspectRatio(new Rational(IMAGE_WIDTH,IMAGE_HEIGHT))
+                    .setTargetResolution(new Size(IMAGE_WIDTH, IMAGE_HEIGHT)).build();
 
     @BindView(R.id.frontCamView)
     TextureView frontCamPreview;
@@ -93,12 +95,13 @@ public class DashFragment extends Fragment implements LifecycleOwner {
                 Preview preview = new Preview(frontCameraPreviewConfig);
                 preview.setOnPreviewOutputUpdateListener(output -> {
                     refreshCameraPreview(output);
+                    setCameraPreviewTransform();
                 });
                 CameraX.bindToLifecycle(this, preview);
             });
 
             frontCamPreview.addOnLayoutChangeListener((v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) -> {
-                //updateFrontCameraPreview();
+                setCameraPreviewTransform();
             });
         }
     }
@@ -109,6 +112,9 @@ public class DashFragment extends Fragment implements LifecycleOwner {
         parentView.addView(frontCamPreview, 0);
         frontCamPreview.setSurfaceTexture(output.getSurfaceTexture());
 
+    }
+
+    private void setCameraPreviewTransform() {
         int rotation = frontCamPreview.getDisplay().getRotation() * 90;
         float x = frontCamPreview.getWidth() / 2f;
         float y = frontCamPreview.getHeight() / 2f;
@@ -117,6 +123,8 @@ public class DashFragment extends Fragment implements LifecycleOwner {
         matrix.postRotate(-rotation, x, y);
         frontCamPreview.setTransform(matrix);
     }
+
+
 
     private boolean hasCameraPermission() {
         return checkSelfPermission(this.getContext(), Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED;
