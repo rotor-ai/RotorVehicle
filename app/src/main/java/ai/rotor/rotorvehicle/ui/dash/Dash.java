@@ -1,13 +1,12 @@
 package ai.rotor.rotorvehicle.ui.dash;
 
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.lifecycle.LifecycleOwner;
-
 import android.os.Bundle;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 import ai.rotor.rotorvehicle.R;
 
-public class Dash extends AppCompatActivity implements LifecycleOwner {
+public class Dash extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
