@@ -8,7 +8,11 @@ import android.view.View
 import android.view.ViewGroup
 import ai.rotor.rotorvehicle.R
 import ai.rotor.rotorvehicle.databinding.DashFragmentBinding
+import android.Manifest
+import android.content.pm.PackageManager
 import android.view.TextureView
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat.checkSelfPermission
 import androidx.databinding.DataBindingUtil
 import butterknife.BindView
 import butterknife.ButterKnife
