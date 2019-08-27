@@ -1,5 +1,6 @@
 package ai.rotor.rotorvehicle.ui.dash;
 
+import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.ViewModelProviders;
 
 import android.os.Bundle;
@@ -13,11 +14,14 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import ai.rotor.rotorvehicle.R;
+import ai.rotor.rotorvehicle.databinding.DashFragmentBinding;
 
 
 public class DashFragment extends Fragment {
 
     private DashViewModel mViewModel;
+
+    DashFragmentBinding binding;
 
     public static DashFragment newInstance() {
         return new DashFragment();
@@ -27,14 +31,18 @@ public class DashFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.dash_fragment, container, false);
+        View view = inflater.inflate(R.layout.dash_fragment, container, false);
+
+        binding = DataBindingUtil.bind(view);
+
+        return view;
     }
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         mViewModel = ViewModelProviders.of(this).get(DashViewModel.class);
-        // TODO: Use the ViewModel
+        binding.setViewModel(mViewModel);
     }
 
 }
