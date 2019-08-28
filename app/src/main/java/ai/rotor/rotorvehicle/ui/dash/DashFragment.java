@@ -1,12 +1,16 @@
 package ai.rotor.rotorvehicle.ui.dash;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Matrix;
+import android.hardware.display.DisplayManager;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
 import android.util.Rational;
 import android.util.Size;
 import android.view.LayoutInflater;
+import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
@@ -44,11 +48,6 @@ public class DashFragment extends Fragment implements LifecycleOwner {
         return new DashFragment();
     }
 
-    PreviewConfig frontCameraPreviewConfig =
-                    new PreviewConfig.Builder()
-                    .setTargetAspectRatio(new Rational(IMAGE_WIDTH,IMAGE_HEIGHT))
-                    .setTargetResolution(new Size(IMAGE_WIDTH, IMAGE_HEIGHT)).build();
-
     @BindView(R.id.frontCamView)
     TextureView frontCamPreview;
 
@@ -59,6 +58,7 @@ public class DashFragment extends Fragment implements LifecycleOwner {
         View view = inflater.inflate(R.layout.dash_fragment, container, false);
         ButterKnife.bind(this, view);
         binding = DataBindingUtil.bind(view);
+
         Timber.plant(new Timber.DebugTree());
 
         return view;
@@ -69,7 +69,6 @@ public class DashFragment extends Fragment implements LifecycleOwner {
         super.onActivityCreated(savedInstanceState);
         mViewModel = ViewModelProviders.of(this).get(DashViewModel.class);
         binding.setViewModel(mViewModel);
-
         setupCamera();
     }
 
@@ -90,20 +89,31 @@ public class DashFragment extends Fragment implements LifecycleOwner {
             requestCameraAccess();
         }
         else {
-            frontCamPreview.post(() -> {
-                //setup the camera
-                Preview preview = new Preview(frontCameraPreviewConfig);
-                preview.setOnPreviewOutputUpdateListener(output -> {
-                    refreshCameraPreview(output);
-                    setCameraPreviewTransform();
-                });
-                CameraX.bindToLifecycle(this, preview);
-            });
-
-            frontCamPreview.addOnLayoutChangeListener((v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) -> {
-                setCameraPreviewTransform();
-            });
+            frontCamPreview.post(this::actuallySetupCamera);
+            frontCamPreview.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) -> setCameraPreviewTransform());
         }
+    }
+
+    private void actuallySetupCamera() {
+        //setup the camera
+        Preview preview = new Preview(cameraPreviewConfig());
+
+        preview.setOnPreviewOutputUpdateListener(output -> {
+            refreshCameraPreview(output);
+            setCameraPreviewTransform();
+        });
+        CameraX.unbindAll();
+        CameraX.bindToLifecycle(this, preview);
+    }
+
+    private PreviewConfig cameraPreviewConfig() {
+        int wid = getFrontCamDisplayMetrics().widthPixels;
+        int height = getFrontCamDisplayMetrics().heightPixels;
+        Timber.d(">>>>>wid: " + wid + " height: " + height);
+        return new PreviewConfig.Builder()
+                .setTargetAspectRatio(new Rational(wid, height))
+                .setTargetRotation(frontCamPreview.getDisplay().getRotation())
+                .build();
     }
 
     private void refreshCameraPreview(Preview.PreviewOutput output) {
@@ -111,7 +121,6 @@ public class DashFragment extends Fragment implements LifecycleOwner {
         parentView.removeView(frontCamPreview);
         parentView.addView(frontCamPreview, 0);
         frontCamPreview.setSurfaceTexture(output.getSurfaceTexture());
-
     }
 
     private void setCameraPreviewTransform() {
@@ -124,7 +133,11 @@ public class DashFragment extends Fragment implements LifecycleOwner {
         frontCamPreview.setTransform(matrix);
     }
 
-
+    private DisplayMetrics getFrontCamDisplayMetrics() {
+        DisplayMetrics result = new DisplayMetrics();
+        frontCamPreview.getDisplay().getMetrics(result);
+        return result;
+    }
 
     private boolean hasCameraPermission() {
         return checkSelfPermission(this.getContext(), Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED;
