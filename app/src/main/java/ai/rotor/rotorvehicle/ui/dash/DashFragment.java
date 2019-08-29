@@ -69,6 +69,7 @@ public class DashFragment extends Fragment implements LifecycleOwner {
         super.onActivityCreated(savedInstanceState);
         mViewModel = ViewModelProviders.of(this).get(DashViewModel.class);
         binding.setViewModel(mViewModel);
+
         setupCamera();
     }
 
@@ -89,8 +90,10 @@ public class DashFragment extends Fragment implements LifecycleOwner {
             requestCameraAccess();
         }
         else {
-            frontCamPreview.post(this::actuallySetupCamera);
-            frontCamPreview.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) -> setCameraPreviewTransform());
+            frontCamPreview.post(() -> {
+                actuallySetupCamera();
+                frontCamPreview.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) -> setCameraPreviewTransform());
+            });
         }
     }
 
@@ -100,7 +103,6 @@ public class DashFragment extends Fragment implements LifecycleOwner {
 
         preview.setOnPreviewOutputUpdateListener(output -> {
             refreshCameraPreview(output);
-            setCameraPreviewTransform();
         });
         CameraX.unbindAll();
         CameraX.bindToLifecycle(this, preview);
@@ -125,17 +127,24 @@ public class DashFragment extends Fragment implements LifecycleOwner {
 
     private void setCameraPreviewTransform() {
         int rotation = frontCamPreview.getDisplay().getRotation() * 90;
-        float x = frontCamPreview.getWidth() / 2f;
-        float y = frontCamPreview.getHeight() / 2f;
+        float wid = getFrontCamDisplayMetrics().widthPixels;
+        float height = getFrontCamDisplayMetrics().heightPixels;
+        float x = wid / 2f;
+        float y = height / 2f;
+
+        Timber.d(">>>>>rotation: " + rotation);
 
         Matrix matrix = new Matrix();
         matrix.postRotate(-rotation, x, y);
+        if (rotation != 0 && rotation != 180) {
+            matrix.preScale((height/wid), (wid/height), x, y);
+        }
         frontCamPreview.setTransform(matrix);
     }
 
     private DisplayMetrics getFrontCamDisplayMetrics() {
         DisplayMetrics result = new DisplayMetrics();
-        frontCamPreview.getDisplay().getMetrics(result);
+        frontCamPreview.getDisplay().getRealMetrics(result);
         return result;
     }
 
