@@ -105,6 +105,7 @@ public class DashFragment extends Fragment implements LifecycleOwner {
         int wid = frontCamPreviewTextureView.getMeasuredWidth();
         int height = frontCamPreviewTextureView.getMeasuredHeight();
         return new PreviewConfig.Builder()
+                .setTargetResolution(new Size(wid, height))
                 .setTargetAspectRatio(new Rational(wid,height))
                 .setTargetRotation(frontCamPreviewTextureView.getDisplay().getRotation())
                 .build();
@@ -121,21 +122,29 @@ public class DashFragment extends Fragment implements LifecycleOwner {
 
     private void setCameraPreviewTransform(Preview.PreviewOutput output) {
         int rotation = frontCamPreviewTextureView.getDisplay().getRotation() * 90;
-        float textureWidth = output.getTextureSize().getWidth();
-        float textureHeight = output.getTextureSize().getHeight();
-        float viewWidth = frontCamPreviewTextureView.getMeasuredWidth();
-        float viewHeight = frontCamPreviewTextureView.getMeasuredHeight();
-        float viewCenterx = viewWidth / 2f;
-        float viewCentery = viewHeight / 2f;
-        Timber.d(">>>>textureWidth: %f textureHeight: %f viewWidth: %f viewHeight: %f", textureWidth, textureHeight, viewWidth, viewHeight);
+        Size sourceImageSize = output.getTextureSize();
+        Size viewSize = new Size(frontCamPreviewTextureView.getMeasuredWidth(), frontCamPreviewTextureView.getMeasuredHeight());
+        float viewCenterx = viewSize.getWidth() / 2f;
+        float viewCentery = viewSize.getHeight() / 2f;
+        Timber.d(">>>>sourceImageSize: " + sourceImageSize + " viewSize: " + viewSize);
+
         Matrix matrix = new Matrix();
         matrix.postRotate(-rotation, viewCenterx, viewCentery);
 
+        float sourceAspectRatio = sourceImageSize.getWidth() / (float)sourceImageSize.getHeight();
+        float viewAspectRatio = viewSize.getWidth() / (float) viewSize.getHeight();
 
-        float sx = 1;
-        float sy = textureWidth/textureHeight;
-        Timber.d(">>>> sx: %f sy: %f", sx, sy );
-        matrix.preScale(sx, sy, viewCenterx, viewCentery);
+        Timber.d(">>>>sourceAspectRatio: " + sourceAspectRatio + " viewAspectRatio: " + viewAspectRatio);
+
+        float sy = viewSize.getWidth() / (float) sourceImageSize.getHeight();
+        float sx = viewSize.getHeight() / (float) sourceImageSize.getWidth();
+
+        //normalize our results
+        float sxFinal = 1;
+        float syFinal = sy/sx;
+
+        Timber.d(">>>>sxFinal: " + sxFinal + " syFinal: " + syFinal);
+        matrix.preScale(sxFinal, syFinal, viewCenterx, viewCentery);//stretch the texture height to match the source aspect ratio
 
         frontCamPreviewTextureView.setTransform(matrix);
     }
