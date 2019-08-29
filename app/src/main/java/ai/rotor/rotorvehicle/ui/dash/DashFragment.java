@@ -6,6 +6,7 @@ import android.graphics.Matrix;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.util.Rational;
+import android.util.Size;
 import android.view.LayoutInflater;
 import android.view.TextureView;
 import android.view.View;
@@ -86,13 +87,6 @@ public class DashFragment extends Fragment implements LifecycleOwner {
         else {
             frontCamPreviewTextureView.post(() -> {
                 actuallySetupCamera();
-                frontCamPreviewTextureView.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
-                    @Override
-                    public void onLayoutChange(View v, int left, int top, int right, int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom) {
-                        Timber.d(">>>>left: %d top: %d right: %d bottom: %d oldLeft: %d oldTop: %d oldRight: %d oldBottom: %d", left, top, right,bottom, oldLeft, oldTop, oldRight, oldBottom);
-                        setCameraPreviewTransform();
-                    }
-                });
             });
         }
     }
@@ -101,9 +95,8 @@ public class DashFragment extends Fragment implements LifecycleOwner {
         //setup the camera
         Preview preview = new Preview(cameraPreviewConfig());
 
-        preview.setOnPreviewOutputUpdateListener(output -> {
-            refreshCameraPreview(output);
-        });
+        preview.setOnPreviewOutputUpdateListener(this::refreshCameraPreview);
+
         CameraX.unbindAll();
         CameraX.bindToLifecycle(this, preview);
     }
@@ -111,9 +104,8 @@ public class DashFragment extends Fragment implements LifecycleOwner {
     private PreviewConfig cameraPreviewConfig() {
         int wid = frontCamPreviewTextureView.getMeasuredWidth();
         int height = frontCamPreviewTextureView.getMeasuredHeight();
-        Timber.d(">>>>>wid: " + wid + " height: " + height);
         return new PreviewConfig.Builder()
-                .setTargetAspectRatio(new Rational(wid, height))
+                .setTargetAspectRatio(new Rational(wid,height))
                 .setTargetRotation(frontCamPreviewTextureView.getDisplay().getRotation())
                 .build();
     }
@@ -122,24 +114,29 @@ public class DashFragment extends Fragment implements LifecycleOwner {
         ViewGroup parentView = (ViewGroup) frontCamPreviewTextureView.getParent();
         parentView.removeView(frontCamPreviewTextureView);
         parentView.addView(frontCamPreviewTextureView, 0);
+        setCameraPreviewTransform(output);
         frontCamPreviewTextureView.setSurfaceTexture(output.getSurfaceTexture());
+
     }
 
-    private void setCameraPreviewTransform() {
+    private void setCameraPreviewTransform(Preview.PreviewOutput output) {
         int rotation = frontCamPreviewTextureView.getDisplay().getRotation() * 90;
-        float wid = frontCamPreviewTextureView.getMeasuredWidth();
-        float height = frontCamPreviewTextureView.getMeasuredHeight();
-        Timber.d("width: %f, height: %f", wid, height);
-        float x = wid / 2f;
-        float y = height / 2f;
-
-        Timber.d(">>>>>rotation: " + rotation);
-
+        float textureWidth = output.getTextureSize().getWidth();
+        float textureHeight = output.getTextureSize().getHeight();
+        float viewWidth = frontCamPreviewTextureView.getMeasuredWidth();
+        float viewHeight = frontCamPreviewTextureView.getMeasuredHeight();
+        float viewCenterx = viewWidth / 2f;
+        float viewCentery = viewHeight / 2f;
+        Timber.d(">>>>textureWidth: %f textureHeight: %f viewWidth: %f viewHeight: %f", textureWidth, textureHeight, viewWidth, viewHeight);
         Matrix matrix = new Matrix();
-        matrix.postRotate(-rotation, x, y);
-        if (rotation != 0 && rotation != 180) {
-            matrix.preScale((height/wid), (wid/height), x, y);
-        }
+        matrix.postRotate(-rotation, viewCenterx, viewCentery);
+
+
+        float sx = 1;
+        float sy = textureWidth/textureHeight;
+        Timber.d(">>>> sx: %f sy: %f", sx, sy );
+        matrix.preScale(sx, sy, viewCenterx, viewCentery);
+
         frontCamPreviewTextureView.setTransform(matrix);
     }
 
