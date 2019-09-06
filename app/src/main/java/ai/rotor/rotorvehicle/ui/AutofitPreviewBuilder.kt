@@ -14,7 +14,13 @@
  * limitations under the License.
  */
 
-package com.android.example.cameraxbasic.utils
+/*
+State changes made by Stuart:
+
+- Changed package to ai.rotor.rotorvehicle.ui
+ */
+
+package ai.rotor.rotorvehicle.ui
 
 import android.content.Context
 import android.graphics.Matrix
