@@ -8,4 +8,8 @@
     <string name="ui_home">HOME</string>
     <string name="ui_auto">AUTO</string>
     <string name="home_command">N000 N000</string>
+    <string name="title_activity_dash">DashActivity</string>
+    <string name="title_controller">Controller</string>
+    <string name="title_camera">Camera</string>
+    <string name="title_blackbox">Blackbox</string>
 </resources>

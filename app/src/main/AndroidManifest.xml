@@ -19,8 +19,9 @@
         android:label="@string/app_name"
         tools:ignore="GoogleAppIndexingWarning">
         <activity
-            android:name=".ui.dash.Dash"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar">
+            android:name=".DashActivity"
+            android:label="@string/title_activity_dash"
+            android:theme="@style/AppTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -28,9 +29,13 @@
             </intent-filter>
         </activity>
         <activity
+            android:name=".ui.dash.Dash"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar">
+        </activity>
+        <activity
             android:name=".ui.monitor.MainActivity"
             android:screenOrientation="portrait"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar"></activity>
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
     </application>
 
 </manifest>
