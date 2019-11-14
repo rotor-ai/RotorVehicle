@@ -42,6 +42,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import ai.rotor.rotorvehicle.R;
+import ai.rotor.rotorvehicle.RotorUtils;
 import ai.rotor.rotorvehicle.agent.RotorAiService;
 import ai.rotor.rotorvehicle.dagger.DaggerRotorComponent;
 import ai.rotor.rotorvehicle.data.Blackbox;
@@ -52,11 +53,6 @@ import butterknife.OnClick;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import timber.log.Timber;
-
-import static ai.rotor.rotorvehicle.RotorUtils.IMAGE_HEIGHT;
-import static ai.rotor.rotorvehicle.RotorUtils.IMAGE_WIDTH;
-import static ai.rotor.rotorvehicle.RotorUtils.ROTOR_TX_RX_CHARACTERISTIC_UUID;
-import static ai.rotor.rotorvehicle.RotorUtils.ROTOR_TX_RX_SERVICE_UUID;
 
 public class MainActivity extends AppCompatActivity implements LifecycleOwner {
     final private static int REQUEST_CAMERA_PERMISSION = 4545;
@@ -84,7 +80,7 @@ public class MainActivity extends AppCompatActivity implements LifecycleOwner {
     private PreviewConfig previewConfig = new PreviewConfig
             .Builder()
             .setTargetAspectRatio(new Rational(1,1))
-            .setTargetResolution(new Size(IMAGE_WIDTH, IMAGE_HEIGHT))
+            .setTargetResolution(new Size(RotorUtils.INSTANCE.getIMAGE_WIDTH(), RotorUtils.INSTANCE.getIMAGE_HEIGHT()))
             .build();
 
     @BindView(R.id.LogRecyclerView)
@@ -201,8 +197,8 @@ public class MainActivity extends AppCompatActivity implements LifecycleOwner {
         mAdvertiser = mBluetoothManager.getAdapter().getBluetoothLeAdvertiser();
         mGattServerCallback = new RotorGattServerCallback();
         mGattServer = mBluetoothManager.openGattServer(this, mGattServerCallback);
-        mGattService = new BluetoothGattService(ROTOR_TX_RX_SERVICE_UUID, BluetoothGattService.SERVICE_TYPE_PRIMARY);
-        BluetoothGattCharacteristic characteristic = new BluetoothGattCharacteristic(ROTOR_TX_RX_CHARACTERISTIC_UUID, BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE, BluetoothGattCharacteristic.PERMISSION_WRITE);
+        mGattService = new BluetoothGattService(RotorUtils.INSTANCE.getROTOR_TX_RX_SERVICE_UUID(), BluetoothGattService.SERVICE_TYPE_PRIMARY);
+        BluetoothGattCharacteristic characteristic = new BluetoothGattCharacteristic(RotorUtils.INSTANCE.getROTOR_TX_RX_CHARACTERISTIC_UUID(), BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE, BluetoothGattCharacteristic.PERMISSION_WRITE);
         characteristic.setValue(new byte[]{0x00, 0x01, 0x02, 0x03});
         mGattService.addCharacteristic(characteristic);
         mGattServer.addService(mGattService);
@@ -216,7 +212,7 @@ public class MainActivity extends AppCompatActivity implements LifecycleOwner {
 
         mAdData = new AdvertiseData.Builder()
                 .setIncludeDeviceName(true)
-                .addServiceUuid(new ParcelUuid(ROTOR_TX_RX_SERVICE_UUID))
+                .addServiceUuid(new ParcelUuid(RotorUtils.INSTANCE.getROTOR_TX_RX_SERVICE_UUID()))
                 .build();
 
         advertiseCallback = new AdvertiseCallback() {

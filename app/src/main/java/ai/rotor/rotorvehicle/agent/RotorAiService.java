@@ -12,11 +12,9 @@ import android.widget.ImageView;
 
 import java.nio.ByteBuffer;
 
+import ai.rotor.rotorvehicle.RotorUtils;
 import ai.rotor.rotorvehicle.ctl.RotorCtlService;
 import timber.log.Timber;
-
-import static ai.rotor.rotorvehicle.RotorUtils.IMAGE_HEIGHT;
-import static ai.rotor.rotorvehicle.RotorUtils.IMAGE_WIDTH;
 
 
 public class RotorAiService implements Runnable {
@@ -100,7 +98,7 @@ public class RotorAiService implements Runnable {
             matrix.postRotate(90);
 
             final Bitmap rotatedBitmap = Bitmap.createBitmap(imgBitmap, 0, 0, imgBitmap.getWidth(), imgBitmap.getHeight(), matrix, true);
-            final Bitmap resizedBitmap = Bitmap.createScaledBitmap(rotatedBitmap, IMAGE_WIDTH, IMAGE_HEIGHT, false);
+            final Bitmap resizedBitmap = Bitmap.createScaledBitmap(rotatedBitmap, RotorUtils.INSTANCE.getIMAGE_WIDTH(), RotorUtils.INSTANCE.getIMAGE_HEIGHT(), false);
 
             // Display the image on the imageView
             runOnUiThread(new Runnable() {

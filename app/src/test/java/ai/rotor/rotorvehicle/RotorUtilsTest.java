@@ -20,7 +20,7 @@ public class RotorUtilsTest {
 
     @Test
     public void isUUIDCorrect() {
-        UUID TestUUID = RotorUtils.ROTOR_TX_RX_SERVICE_UUID;
+        UUID TestUUID = RotorUtils.INSTANCE.getROTOR_TX_RX_SERVICE_UUID();
         assertEquals(TestUUID, correctUUID);
     }
 }

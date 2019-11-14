@@ -16,11 +16,8 @@ import android.os.Handler;
 
 import java.util.Collections;
 
+import ai.rotor.rotorvehicle.RotorUtils;
 import timber.log.Timber;
-
-import static ai.rotor.rotorvehicle.RotorUtils.IMAGE_HEIGHT;
-import static ai.rotor.rotorvehicle.RotorUtils.IMAGE_WIDTH;
-import static ai.rotor.rotorvehicle.RotorUtils.MAX_IMAGES_USED;
 
 public class RotorCamera {
     private CameraDevice mCameraDevice;
@@ -57,7 +54,7 @@ public class RotorCamera {
         Timber.d("Using camera id: %s", id);
 
         // Initialize the image processor
-        mImageReader = ImageReader.newInstance(IMAGE_WIDTH, IMAGE_HEIGHT, ImageFormat.JPEG, MAX_IMAGES_USED);
+        mImageReader = ImageReader.newInstance(RotorUtils.INSTANCE.getIMAGE_WIDTH(), RotorUtils.INSTANCE.getIMAGE_HEIGHT(), ImageFormat.JPEG, RotorUtils.INSTANCE.getMAX_IMAGES_USED());
         mImageReader.setOnImageAvailableListener(imageAvailableListener, backgroundHandler);
 
         // Open the camera resource

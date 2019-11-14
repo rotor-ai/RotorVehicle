@@ -14,10 +14,8 @@ import com.felhr.usbserial.UsbSerialInterface;
 
 import java.util.HashMap;
 
+import ai.rotor.rotorvehicle.RotorUtils;
 import timber.log.Timber;
-
-import static ai.rotor.rotorvehicle.RotorUtils.ARDUINO_VENDOR_ID;
-import static ai.rotor.rotorvehicle.RotorUtils.BAUD_RATE;
 
 public class Arduino implements UsbSerialInterface.UsbReadCallback {
     private Context mContext;
@@ -95,7 +93,7 @@ public class Arduino implements UsbSerialInterface.UsbReadCallback {
                 switch (intent.getAction()) {
                     case UsbManager.ACTION_USB_DEVICE_ATTACHED:
                         device = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
-                        if (device.getVendorId() == ARDUINO_VENDOR_ID) {
+                        if (device.getVendorId() == RotorUtils.INSTANCE.getARDUINO_VENDOR_ID()) {
                             mLastArduinoAttached = device;
                             if (mListener != null) {
                                 mListener.onArduinoAttached(device);
@@ -104,7 +102,7 @@ public class Arduino implements UsbSerialInterface.UsbReadCallback {
                         break;
                     case UsbManager.ACTION_USB_DEVICE_DETACHED:
                         device = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
-                        if (device.getVendorId() == ARDUINO_VENDOR_ID) {
+                        if (device.getVendorId() == RotorUtils.INSTANCE.getARDUINO_VENDOR_ID()) {
                             if (mListener != null) {
                                 mListener.onArduinoDetached();
                             }
@@ -114,12 +112,12 @@ public class Arduino implements UsbSerialInterface.UsbReadCallback {
                         boolean permissionGranted = intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false);
                         if (permissionGranted) {
                             device = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
-                            if (device.getVendorId() == ARDUINO_VENDOR_ID) {
+                            if (device.getVendorId() == RotorUtils.INSTANCE.getARDUINO_VENDOR_ID()) {
                                 mSerialConnection = mUsbManager.openDevice(device);
                                 mSerialPort = UsbSerialDevice.createUsbSerialDevice(device, mSerialConnection);
                                 if (mSerialPort != null) {
                                     if (mSerialPort.open()) {
-                                        mSerialPort.setBaudRate(BAUD_RATE);
+                                        mSerialPort.setBaudRate(RotorUtils.INSTANCE.getBAUD_RATE());
                                         mSerialPort.setDataBits(UsbSerialInterface.DATA_BITS_8);
                                         mSerialPort.setStopBits(UsbSerialInterface.STOP_BITS_1);
                                         mSerialPort.setParity(UsbSerialInterface.PARITY_NONE);
@@ -148,7 +146,7 @@ public class Arduino implements UsbSerialInterface.UsbReadCallback {
     private UsbDevice getAttachedArduino() {
         HashMap<String, UsbDevice> map = mUsbManager.getDeviceList();
         for (UsbDevice device : map.values()) {
-            if (device.getVendorId() == ARDUINO_VENDOR_ID) {
+            if (device.getVendorId() == RotorUtils.INSTANCE.getARDUINO_VENDOR_ID()) {
                 return device;
             }
         }
