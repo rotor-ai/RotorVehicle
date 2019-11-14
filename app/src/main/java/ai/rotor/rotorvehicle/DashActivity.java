@@ -10,6 +10,8 @@ import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
+import timber.log.Timber;
+
 public class DashActivity extends AppCompatActivity {
 
     @Override
@@ -25,6 +27,12 @@ public class DashActivity extends AppCompatActivity {
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
         NavigationUI.setupWithNavController(navView, navController);
+
+        Timber.plant(new Timber.DebugTree());
+        Timber.d("rhdebug - Creating DashActivity");
+
+        // Start control service
+
     }
 
 }

@@ -9,17 +9,17 @@
         android:id="@+id/navigation_home"
         android:name="ai.rotor.rotorvehicle.ui.controller.ControllerFragment"
         android:label="@string/title_controller"
-        tools:layout="@layout/fragment_home" />
+        tools:layout="@layout/fragment_controller" />
 
     <fragment
         android:id="@+id/navigation_dashboard"
         android:name="ai.rotor.rotorvehicle.ui.camera.CameraFragment"
         android:label="@string/title_camera"
-        tools:layout="@layout/fragment_dashboard" />
+        tools:layout="@layout/fragment_camera" />
 
     <fragment
         android:id="@+id/navigation_notifications"
         android:name="ai.rotor.rotorvehicle.ui.blackbox.BlackboxFragment"
         android:label="@string/title_blackbox"
-        tools:layout="@layout/fragment_notifications" />
+        tools:layout="@layout/fragment_blackbox" />
 </navigation>

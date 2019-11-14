@@ -13,23 +13,27 @@ import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 
 import ai.rotor.rotorvehicle.R;
+import timber.log.Timber;
 
 public class ControllerFragment extends Fragment {
 
-    private ControllerViewModel homeViewModel;
+    private ControllerViewModel controllerViewModel;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
-        homeViewModel =
+        controllerViewModel =
                 ViewModelProviders.of(this).get(ControllerViewModel.class);
-        View root = inflater.inflate(R.layout.fragment_home, container, false);
-        final TextView textView = root.findViewById(R.id.text_home);
-        homeViewModel.getText().observe(this, new Observer<String>() {
+        View view = inflater.inflate(R.layout.fragment_controller, container, false);
+        final TextView textView = view.findViewById(R.id.text_home);
+        controllerViewModel.getText().observe(this, new Observer<String>() {
             @Override
             public void onChanged(@Nullable String s) {
                 textView.setText(s);
             }
         });
-        return root;
+
+        Timber.d("rhdebug - Creating ControllerFragment");
+
+        return view;
     }
 }
