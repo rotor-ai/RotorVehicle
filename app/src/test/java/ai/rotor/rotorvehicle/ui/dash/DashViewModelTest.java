@@ -16,7 +16,7 @@ public class DashViewModelTest {
 
     @Test
     public void ShouldProperlyConstructViewModel() {
-        assertEquals("Dashboard", testObj.viewTitle);
+        assertEquals("Dashboard", testObj.getViewTitle());
     }
 
 }
