@@ -29,10 +29,6 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".ui.dash.Dash"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar">
-        </activity>
-        <activity
             android:name=".ui.monitor.MainActivity"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
